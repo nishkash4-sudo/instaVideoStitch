@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InstaVideoStitch</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #e8e8e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(90deg, #f58529, #dd2a7b, #8134af, #515bd4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: #999;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .url-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .url-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .url-num {
+      font-size: 0.78rem;
+      color: #555;
+      width: 18px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    input[type="url"] {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 0.88rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="url"]:focus {
+      border-color: #8134af;
+    }
+
+    input[type="url"]::placeholder {
+      color: #444;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 28px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-stitch {
+      background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af);
+      color: #fff;
+      width: 100%;
+      font-size: 1rem;
+      padding: 14px;
+      margin-bottom: 24px;
+    }
+
+    .btn-download {
+      background: #1db954;
+      color: #fff;
+      width: 100%;
+      font-size: 1rem;
+      padding: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .log-box {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 14px 16px;
+      height: 260px;
+      overflow-y: auto;
+      font-family: "SF Mono", "Fira Code", "Courier New", monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #b0b0b0;
+      display: none;
+    }
+
+    .log-box .line { margin-bottom: 1px; }
+    .log-box .line.ok   { color: #4ade80; }
+    .log-box .line.warn { color: #facc15; }
+    .log-box .line.err  { color: #f87171; }
+    .log-box .line.head { color: #c084fc; font-weight: bold; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>InstaVideoStitch</h1>
+    <p class="subtitle">Paste up to 10 Instagram Reel URLs and stitch them into one video.</p>
+
+    <label>Reel URLs</label>
+    <div class="url-list" id="urlList"></div>
+
+    <button class="btn btn-stitch" id="stitchBtn" onclick="startStitch()">
+      <span class="spinner" id="spinner"></span>
+      <span id="btnLabel">Stitch Videos</span>
+    </button>
+
+    <div class="log-box" id="logBox"></div>
+
+    <a href="/download" id="downloadBtn" class="btn btn-download">
+      Download output.mp4
+    </a>
+  </div>
+
+  <script>
+    const urlList = document.getElementById("urlList");
+
+    // Build 10 URL input rows
+    for (let i = 1; i <= 10; i++) {
+      const row = document.createElement("div");
+      row.className = "url-row";
+      row.innerHTML = `
+        <span class="url-num">${i}</span>
+        <input type="url" id="url${i}" placeholder="https://www.instagram.com/reel/..." />
+      `;
+      urlList.appendChild(row);
+    }
+
+    function getURLs() {
+      const urls = [];
+      for (let i = 1; i <= 10; i++) {
+        const val = document.getElementById(`url${i}`).value.trim();
+        urls.push(val);
+      }
+      return urls;
+    }
+
+    function appendLog(text) {
+      const logBox = document.getElementById("logBox");
+      const line = document.createElement("div");
+      line.className = "line";
+
+      if (text.startsWith("[ERROR]")) line.classList.add("err");
+      else if (text.startsWith("[WARN]") || text.includes("[WARN]")) line.classList.add("warn");
+      else if (text.startsWith("[OK]") || text.includes("[OK]")) line.classList.add("ok");
+      else if (text.match(/^\[[\d\/]+\]/)) line.classList.add("head");
+
+      line.textContent = text;
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function startStitch() {
+      const urls = getURLs().filter(u => u.length > 0);
+      if (urls.length === 0) {
+        alert("Please enter at least one Instagram Reel URL.");
+        return;
+      }
+
+      const btn = document.getElementById("stitchBtn");
+      const spinner = document.getElementById("spinner");
+      const btnLabel = document.getElementById("btnLabel");
+      const logBox = document.getElementById("logBox");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      btn.disabled = true;
+      spinner.style.display = "block";
+      btnLabel.textContent = "Working...";
+      logBox.innerHTML = "";
+      logBox.style.display = "block";
+      downloadBtn.style.display = "none";
+
+      fetch("/stitch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: getURLs() }),
+      }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              btn.disabled = false;
+              spinner.style.display = "none";
+              btnLabel.textContent = "Stitch Videos";
+              return;
+            }
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop(); // keep incomplete line
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const msg = line.slice(6);
+                if (msg === "DONE") {
+                  downloadBtn.style.display = "flex";
+                  btn.disabled = false;
+                  spinner.style.display = "none";
+                  btnLabel.textContent = "Stitch Videos";
+                } else {
+                  appendLog(msg);
+                }
+              }
+            }
+            read();
+          });
+        }
+        read();
+      }).catch(err => {
+        appendLog(`[ERROR] Request failed: ${err}`);
+        btn.disabled = false;
+        spinner.style.display = "none";
+        btnLabel.textContent = "Stitch Videos";
+      });
+    }
+  </script>
+</body>
+</html>
