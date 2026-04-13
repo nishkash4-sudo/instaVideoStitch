@@ -5,149 +5,200 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>InstaStitch</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
     :root {
       --ig1: #f58529;
       --ig2: #dd2a7b;
       --ig3: #8134af;
       --ig4: #515bd4;
-      --bg: #080810;
-      --surface: #0f0f1a;
-      --surface2: #161625;
-      --border: rgba(255,255,255,0.07);
-      --text: #f0f0f8;
-      --text-muted: #6b6b8a;
+      --bg: #07070f;
+      --surface: #0d0d1c;
+      --surface2: #13132a;
+      --surface3: #1a1a30;
+      --border: rgba(255,255,255,0.06);
+      --border-bright: rgba(255,255,255,0.1);
+      --text: #eeeef8;
+      --text-muted: #5a5a7a;
+      --text-dim: #3a3a55;
       --success: #4ade80;
       --warn: #facc15;
       --err: #f87171;
       --purple: #a78bfa;
+      --blue: #60a5fa;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 16px 80px;
       overflow-x: hidden;
     }
 
-    body::before {
-      content: '';
+    /* ── Ambient orbs ── */
+    .orb {
       position: fixed;
-      top: -200px; left: 50%;
-      transform: translateX(-50%);
-      width: 800px; height: 500px;
-      background: radial-gradient(ellipse, rgba(131,52,175,0.18) 0%, transparent 70%);
+      border-radius: 50%;
       pointer-events: none;
       z-index: 0;
+      filter: blur(80px);
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      top: -150px; left: -100px;
+      background: radial-gradient(circle, rgba(131,52,175,0.14) 0%, transparent 70%);
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      top: 200px; right: -100px;
+      background: radial-gradient(circle, rgba(221,42,123,0.1) 0%, transparent 70%);
+    }
+    .orb-3 {
+      width: 350px; height: 350px;
+      bottom: 100px; left: 30%;
+      background: radial-gradient(circle, rgba(81,91,212,0.1) 0%, transparent 70%);
     }
 
-    .container {
+    /* ── Page wrapper ── */
+    .page {
       position: relative;
       z-index: 1;
-      width: 100%;
-      max-width: 620px;
-      padding-top: 56px;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
     }
 
     /* ── Header ── */
     .header {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 0 40px;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 36px;
     }
 
     .logo {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 12px;
     }
 
     .logo-icon {
-      width: 44px; height: 44px;
+      width: 42px; height: 42px;
       background: linear-gradient(135deg, var(--ig1), var(--ig2), var(--ig3));
       border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 24px rgba(221,42,123,0.35);
-      transition: transform 0.3s ease;
+      font-size: 20px;
+      box-shadow: 0 0 28px rgba(221,42,123,0.3);
+      flex-shrink: 0;
     }
 
-    h1 {
-      font-size: 1.7rem;
+    .logo-text h1 {
+      font-size: 1.35rem;
       font-weight: 800;
       background: linear-gradient(90deg, var(--ig1), var(--ig2), var(--ig3), var(--ig4));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
     }
 
-    .subtitle {
+    .logo-text p {
+      font-size: 0.75rem;
       color: var(--text-muted);
-      font-size: 0.88rem;
-      line-height: 1.5;
+      margin-top: 2px;
     }
 
-    /* ── Card ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 24px 28px;
-      margin-bottom: 14px;
-    }
-
-    .card-header {
+    .header-badge {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-    }
-
-    .card-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      gap: 6px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-bright);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.73rem;
       color: var(--text-muted);
     }
 
-    .link-counter {
-      font-size: 0.73rem;
-      font-weight: 600;
-      color: var(--purple);
-      background: rgba(167,139,250,0.1);
-      border: 1px solid rgba(167,139,250,0.2);
-      padding: 3px 10px;
-      border-radius: 20px;
+    .header-badge .dot-live {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 2s ease infinite;
     }
 
-    /* ── Mode Toggle ── */
-    .mode-card {
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Two-column layout ── */
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      grid-template-rows: auto;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Left panel ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: sticky;
+      top: 24px;
+    }
+
+    /* ── Right panel ── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Panel card ── */
+    .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px 28px;
-      margin-bottom: 14px;
+      border-radius: 18px;
+      overflow: hidden;
     }
 
-    .mode-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-bottom: 14px;
+    .panel-body {
+      padding: 20px 22px;
     }
 
-    .mode-toggle {
+    /* ── Mode toggle ── */
+    .mode-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -160,53 +211,75 @@
 
     .mode-opt input[type="radio"] {
       position: absolute;
-      opacity: 0;
-      width: 0; height: 0;
+      opacity: 0; width: 0; height: 0;
     }
 
     .mode-tile {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 16px 12px;
+      gap: 7px;
+      padding: 16px 10px;
       border-radius: 14px;
       border: 1.5px solid var(--border);
       background: var(--surface2);
-      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+      transition: all 0.2s;
       user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-tile::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--ig1), var(--ig3));
+      opacity: 0;
+      transition: opacity 0.2s;
     }
 
     .mode-tile:hover { border-color: rgba(167,139,250,0.3); transform: translateY(-1px); }
 
     .mode-opt input:checked ~ .mode-tile {
       border-color: var(--ig3);
-      background: rgba(131,52,175,0.1);
-      box-shadow: 0 0 0 3px rgba(131,52,175,0.12), inset 0 0 20px rgba(131,52,175,0.05);
+      background: rgba(131,52,175,0.08);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.1),
+                  inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    .mode-icon {
-      font-size: 26px;
-      line-height: 1;
+    .mode-tile-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
     }
 
-    .mode-name {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--text);
+    .mode-checkmark {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--ig3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px;
+      color: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 2;
     }
 
-    .mode-desc {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.4;
-    }
+    .mode-opt input:checked ~ .mode-tile .mode-checkmark { opacity: 1; }
+
+    .mode-icon { font-size: 24px; line-height: 1; }
+    .mode-name { font-size: 0.84rem; font-weight: 700; }
+    .mode-desc { font-size: 0.68rem; color: var(--text-muted); text-align: center; line-height: 1.4; }
 
     .mode-badge {
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 20px;
       letter-spacing: 0.06em;
     }
@@ -214,34 +287,225 @@
     .badge-mp3 { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
     .badge-mp4 { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
 
-    /* ── URL inputs ── */
+    /* ── Bulk paste ── */
+    .bulk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .bulk-card.drag-over {
+      border-color: rgba(131,52,175,0.5);
+    }
+
+    .bulk-body { padding: 20px 22px; }
+
+    .bulk-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .bulk-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bulk-hint-pill {
+      font-size: 0.67rem;
+      color: var(--text-dim);
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    .bulk-clear {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      display: none;
+      transition: color 0.15s;
+    }
+    .bulk-clear:hover { color: var(--err); }
+
+    .bulk-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      line-height: 1.7;
+      padding: 11px 13px;
+      outline: none;
+      resize: none;
+      height: 110px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .bulk-textarea:focus {
+      border-color: rgba(131,52,175,0.5);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.08);
+    }
+
+    .bulk-textarea::placeholder { color: var(--text-dim); }
+
+    .bulk-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    .bulk-count {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      transition: color 0.2s;
+    }
+    .bulk-count.has-links { color: var(--purple); }
+
+    .bulk-import-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg, rgba(245,133,41,0.12), rgba(131,52,175,0.12));
+      border: 1px solid rgba(131,52,175,0.22);
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+    }
+
+    .bulk-import-btn:hover {
+      background: linear-gradient(135deg, rgba(245,133,41,0.22), rgba(131,52,175,0.22));
+      border-color: rgba(131,52,175,0.4);
+      transform: translateY(-1px);
+    }
+
+    .bulk-import-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    /* ── Stitch button (left panel bottom) ── */
+    .stitch-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 15px;
+      background: linear-gradient(135deg, var(--ig1) 0%, var(--ig2) 50%, var(--ig3) 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.97rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(221,42,123,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stitch-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.2s;
+    }
+
+    .stitch-btn:hover::before { opacity: 1; }
+    .stitch-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(221,42,123,0.35); }
+    .stitch-btn:active { transform: none; }
+    .stitch-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .spinner {
+      width: 17px; height: 17px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      display: none; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── URL card (right panel) ── */
+    .url-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .url-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .url-card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .link-counter {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--purple);
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.18);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .url-scroll-area {
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 14px 18px;
+      scrollbar-width: thin;
+      scrollbar-color: #1e1e35 transparent;
+    }
+
+    .url-scroll-area::-webkit-scrollbar { width: 4px; }
+    .url-scroll-area::-webkit-scrollbar-thumb { background: #1e1e35; border-radius: 4px; }
+
     .url-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
     }
 
     .url-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      animation: slideIn 0.22s ease;
+      gap: 8px;
+      animation: rowIn 0.2s ease;
     }
 
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideOut {
-      to { opacity: 0; transform: translateY(-6px); }
-    }
+    @keyframes rowIn  { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+    @keyframes rowOut { to   { opacity: 0; transform: translateY(-5px); } }
 
     .url-num {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 600;
-      color: var(--text-muted);
-      width: 20px;
+      color: var(--text-dim);
+      width: 18px;
       text-align: right;
       flex-shrink: 0;
       font-variant-numeric: tabular-nums;
@@ -254,302 +518,142 @@
 
     .url-input-wrap .ig-icon {
       position: absolute;
-      left: 12px; top: 50%;
+      left: 11px; top: 50%;
       transform: translateY(-50%);
-      font-size: 13px;
-      opacity: 0.3;
+      font-size: 12px;
+      opacity: 0.25;
       pointer-events: none;
       transition: opacity 0.2s;
     }
 
-    .url-input-wrap:focus-within .ig-icon { opacity: 0.65; }
+    .url-input-wrap:focus-within .ig-icon { opacity: 0.6; }
 
     input[type="url"] {
       width: 100%;
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       color: var(--text);
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       font-family: inherit;
-      padding: 11px 14px 11px 34px;
+      padding: 9px 12px 9px 30px;
       outline: none;
-      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      transition: all 0.18s;
     }
 
     input[type="url"]:focus {
-      border-color: rgba(131,52,175,0.6);
-      background: #1a1a2e;
-      box-shadow: 0 0 0 3px rgba(131,52,175,0.1);
+      border-color: rgba(131,52,175,0.55);
+      background: #161630;
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.08);
     }
 
-    input[type="url"].error { border-color: rgba(248,113,113,0.6) !important; }
-    input[type="url"]::placeholder { color: #2e2e48; }
+    input[type="url"].shake {
+      animation: shake 0.35s ease;
+      border-color: rgba(248,113,113,0.5);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-5px); }
+      60%       { transform: translateX(5px); }
+    }
+
+    input[type="url"]::placeholder { color: var(--text-dim); }
 
     .remove-btn {
-      width: 28px; height: 28px;
+      width: 26px; height: 26px;
       flex-shrink: 0;
-      background: rgba(248,113,113,0.07);
-      border: 1px solid rgba(248,113,113,0.12);
-      border-radius: 8px;
+      background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.1);
+      border-radius: 7px;
       color: var(--err);
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+      transition: all 0.15s;
       opacity: 0;
     }
 
     .url-row:hover .remove-btn { opacity: 1; }
-    .remove-btn:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.35); }
+    .remove-btn:hover { background: rgba(248,113,113,0.16); border-color: rgba(248,113,113,0.3); }
 
-    /* ── Bulk paste ── */
-    .bulk-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px 28px;
-      margin-bottom: 14px;
-      transition: border-color 0.2s;
-    }
-
-    .bulk-card.drag-over {
-      border-color: rgba(131,52,175,0.5);
-      background: rgba(131,52,175,0.04);
-    }
-
-    .bulk-header {
+    /* ── Add row ── */
+    .add-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+      gap: 10px;
+      padding: 12px 18px 16px;
+      border-top: 1px solid var(--border);
     }
 
-    .bulk-title-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .bulk-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-    }
-
-    .bulk-hint {
-      font-size: 0.7rem;
-      color: #3a3a55;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      padding: 2px 8px;
-      border-radius: 10px;
-    }
-
-    .bulk-clear-btn {
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-family: inherit;
-      transition: color 0.2s;
-      display: none;
-    }
-
-    .bulk-clear-btn:hover { color: var(--err); }
-
-    .bulk-textarea {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-size: 0.81rem;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      line-height: 1.65;
-      padding: 12px 14px;
-      outline: none;
-      resize: vertical;
-      min-height: 90px;
-      max-height: 200px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .bulk-textarea:focus {
-      border-color: rgba(131,52,175,0.55);
-      box-shadow: 0 0 0 3px rgba(131,52,175,0.1);
-    }
-
-    .bulk-textarea::placeholder { color: #2e2e48; }
-
-    .bulk-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-
-    .bulk-count {
-      font-size: 0.72rem;
-      color: #3a3a55;
-      transition: color 0.2s;
-    }
-
-    .bulk-count.has-links { color: var(--purple); }
-
-    .bulk-import-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, rgba(245,133,41,0.15), rgba(131,52,175,0.15));
-      border: 1px solid rgba(131,52,175,0.25);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-
-    .bulk-import-btn:hover {
-      background: linear-gradient(135deg, rgba(245,133,41,0.25), rgba(131,52,175,0.25));
-      border-color: rgba(131,52,175,0.45);
-      transform: translateY(-1px);
-    }
-
-    .bulk-import-btn:active { transform: none; }
-    .bulk-import-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-    .bulk-flash {
-      animation: flashGreen 0.6s ease;
-    }
-
-    @keyframes flashGreen {
-      0%   { border-color: rgba(74,222,128,0.6); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
-      100% { border-color: var(--border); box-shadow: none; }
-    }
-
-    /* ── Add more ── */
-    .add-more-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .add-more-line { flex: 1; height: 1px; background: var(--border); }
+    .add-line { flex: 1; height: 1px; background: var(--border); }
 
     .add-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(167,139,250,0.07);
-      border: 1px solid rgba(167,139,250,0.18);
+      gap: 5px;
+      background: rgba(167,139,250,0.06);
+      border: 1px solid rgba(167,139,250,0.15);
       border-radius: 20px;
       color: var(--purple);
-      font-size: 0.78rem;
+      font-size: 0.73rem;
       font-weight: 600;
-      padding: 6px 14px;
+      padding: 5px 13px;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
       font-family: inherit;
+      transition: all 0.15s;
     }
 
-    .add-btn:hover { background: rgba(167,139,250,0.14); border-color: rgba(167,139,250,0.38); transform: translateY(-1px); }
+    .add-btn:hover { background: rgba(167,139,250,0.13); border-color: rgba(167,139,250,0.35); transform: translateY(-1px); }
     .add-btn:active { transform: none; }
-    .add-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-    .add-btn .plus { font-size: 15px; font-weight: 400; }
+    .add-btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none; }
 
-    /* ── Stitch button ── */
-    .stitch-btn {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--ig1) 0%, var(--ig2) 50%, var(--ig3) 100%);
-      color: #fff;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 24px rgba(221,42,123,0.28);
-      margin-bottom: 14px;
-      position: relative;
-      overflow: hidden;
+    /* ── Full-width bottom area ── */
+    .bottom-area {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
-
-    .stitch-btn::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-      opacity: 0; transition: opacity 0.2s;
-    }
-
-    .stitch-btn:hover::before { opacity: 1; }
-    .stitch-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(221,42,123,0.38); }
-    .stitch-btn:active { transform: none; }
-    .stitch-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
-      display: none; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Log card ── */
     .log-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 18px;
       overflow: hidden;
       display: none;
-      margin-bottom: 14px;
     }
 
     .log-titlebar {
       display: flex; align-items: center; gap: 7px;
-      padding: 11px 16px;
+      padding: 10px 16px;
       background: var(--surface2);
       border-bottom: 1px solid var(--border);
     }
 
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
 
-    .log-label { font-size: 0.72rem; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
+    .log-label { font-size: 0.7rem; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
 
     .log-body {
-      padding: 14px 16px;
-      height: 220px;
+      padding: 14px 18px;
+      height: 200px;
       overflow-y: auto;
       font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       line-height: 1.75;
-      color: #6b6b8a;
+      color: var(--text-muted);
       scrollbar-width: thin;
-      scrollbar-color: #2a2a40 transparent;
+      scrollbar-color: #1e1e35 transparent;
     }
 
     .log-body::-webkit-scrollbar { width: 4px; }
-    .log-body::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 4px; }
+    .log-body::-webkit-scrollbar-thumb { background: #1e1e35; border-radius: 4px; }
 
     .log-line { display: flex; gap: 10px; }
-    .log-line .ts { color: #2e2e48; flex-shrink: 0; }
+    .log-line .ts  { color: var(--text-dim); flex-shrink: 0; }
     .log-line.ok   .msg { color: var(--success); }
     .log-line.warn .msg { color: var(--warn); }
     .log-line.err  .msg { color: var(--err); }
@@ -557,171 +661,236 @@
 
     /* ── Download card ── */
     .download-card {
-      border-radius: 20px;
-      padding: 28px;
+      border-radius: 18px;
+      padding: 0;
       display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      text-align: center;
+      overflow: hidden;
       animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
     }
 
-    .download-card.audio-result {
-      background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02));
-      border: 1px solid rgba(74,222,128,0.2);
+    @keyframes popIn { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } }
+
+    .download-card.audio-result { border: 1px solid rgba(74,222,128,0.18); }
+    .download-card.video-result { border: 1px solid rgba(96,165,250,0.18); }
+
+    .download-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 28px;
+      gap: 20px;
     }
 
-    .download-card.video-result {
-      background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(96,165,250,0.02));
-      border: 1px solid rgba(96,165,250,0.2);
+    .audio-result .download-inner {
+      background: linear-gradient(135deg, rgba(74,222,128,0.06) 0%, rgba(74,222,128,0.02) 100%);
+    }
+    .video-result .download-inner {
+      background: linear-gradient(135deg, rgba(96,165,250,0.06) 0%, rgba(96,165,250,0.02) 100%);
     }
 
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.92); }
-      to   { opacity: 1; transform: scale(1); }
-    }
+    .download-left { display: flex; align-items: center; gap: 16px; }
 
-    .success-icon {
-      width: 54px; height: 54px;
-      border-radius: 50%;
+    .dl-icon {
+      width: 50px; height: 50px;
+      border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
+      font-size: 22px;
+      flex-shrink: 0;
     }
 
-    .audio-result .success-icon { background: rgba(74,222,128,0.1); border: 1.5px solid rgba(74,222,128,0.25); }
-    .video-result .success-icon { background: rgba(96,165,250,0.1); border: 1.5px solid rgba(96,165,250,0.25); }
+    .audio-result .dl-icon { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); }
+    .video-result .dl-icon { background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.2); }
 
-    .download-card h3 { font-size: 1rem; font-weight: 700; }
-    .audio-result h3 { color: var(--success); }
-    .video-result h3 { color: #60a5fa; }
+    .dl-text h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
+    .audio-result .dl-text h3 { color: var(--success); }
+    .video-result .dl-text h3 { color: var(--blue); }
 
-    .download-card p { font-size: 0.82rem; color: var(--text-muted); }
+    .dl-text p { font-size: 0.78rem; color: var(--text-muted); }
 
     .download-btn {
       display: inline-flex; align-items: center; gap: 8px;
       font-family: inherit;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      padding: 12px 28px;
+      padding: 12px 24px;
       border-radius: 12px;
       text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
       transition: transform 0.15s, filter 0.2s;
     }
 
-    .download-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
-
+    .download-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
     .audio-result .download-btn { background: var(--success); color: #000; }
-    .video-result .download-btn { background: #60a5fa; color: #000; }
+    .video-result .download-btn { background: var(--blue); color: #000; }
+
+    /* ── Flash animation for URL card ── */
+    @keyframes flashBorder {
+      0%   { box-shadow: 0 0 0 2px rgba(74,222,128,0.5); }
+      100% { box-shadow: none; }
+    }
+    .flash { animation: flashBorder 0.7s ease; }
+
+    /* ── Responsive ── */
+    @media (max-width: 780px) {
+      .workspace { grid-template-columns: 1fr; }
+      .left-panel { position: static; }
+      .header { flex-direction: column; gap: 12px; text-align: center; }
+      .download-inner { flex-direction: column; text-align: center; }
+      .download-left { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
 
-    <!-- Header -->
+  <!-- Ambient orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="page">
+
+    <!-- ── Header ── -->
     <div class="header">
       <div class="logo">
         <div class="logo-icon" id="logoIcon">🎵</div>
-        <h1 id="appTitle">InstaStitch</h1>
-      </div>
-      <p class="subtitle">Paste Instagram Reel links and merge them into one file.</p>
-    </div>
-
-    <!-- Output Mode Toggle -->
-    <div class="mode-card">
-      <div class="mode-label">Output Format</div>
-      <div class="mode-toggle">
-
-        <label class="mode-opt">
-          <input type="radio" name="mode" value="audio" checked onchange="onModeChange()" />
-          <div class="mode-tile">
-            <span class="mode-icon">🎵</span>
-            <span class="mode-name">Audio</span>
-            <span class="mode-desc">Extract &amp; merge audio tracks</span>
-            <span class="mode-badge badge-mp3">MP3</span>
-          </div>
-        </label>
-
-        <label class="mode-opt">
-          <input type="radio" name="mode" value="video" onchange="onModeChange()" />
-          <div class="mode-tile">
-            <span class="mode-icon">🎬</span>
-            <span class="mode-name">Video</span>
-            <span class="mode-desc">Merge full reels into one clip</span>
-            <span class="mode-badge badge-mp4">MP4</span>
-          </div>
-        </label>
-
-      </div>
-    </div>
-
-    <!-- Bulk paste card -->
-    <div class="bulk-card" id="bulkCard">
-      <div class="bulk-header">
-        <div class="bulk-title-group">
-          <span class="bulk-title">Bulk Paste</span>
-          <span class="bulk-hint">one link per line · or separated by spaces/commas</span>
+        <div class="logo-text">
+          <h1>InstaStitch</h1>
+          <p>Instagram Reel merger · local tool</p>
         </div>
-        <button class="bulk-clear-btn" id="bulkClearBtn" onclick="clearBulk()">✕ Clear</button>
       </div>
-      <textarea
-        class="bulk-textarea"
-        id="bulkInput"
-        placeholder="Paste all your links here at once…&#10;https://www.instagram.com/reel/ABC123/&#10;https://www.instagram.com/reel/DEF456/&#10;https://www.instagram.com/reel/GHI789/"
-        oninput="onBulkInput()"
-      ></textarea>
-      <div class="bulk-footer">
-        <span class="bulk-count" id="bulkCount">Detected links will appear here</span>
-        <button class="bulk-import-btn" id="bulkImportBtn" onclick="importBulk()" disabled>
-          ↓ Import into fields
+      <div class="header-badge">
+        <div class="dot-live"></div>
+        Running locally on :8080
+      </div>
+    </div>
+
+    <!-- ── Two-column workspace ── -->
+    <div class="workspace">
+
+      <!-- ════ LEFT PANEL ════ -->
+      <div class="left-panel">
+
+        <!-- Output format -->
+        <div class="section-label">Output Format</div>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="mode-grid">
+              <label class="mode-opt">
+                <input type="radio" name="mode" value="audio" checked onchange="onModeChange()" />
+                <div class="mode-tile">
+                  <div class="mode-checkmark">✓</div>
+                  <div class="mode-tile-content">
+                    <span class="mode-icon">🎵</span>
+                    <span class="mode-name">Audio</span>
+                    <span class="mode-desc">Extract &amp; merge audio tracks</span>
+                    <span class="mode-badge badge-mp3">MP3</span>
+                  </div>
+                </div>
+              </label>
+              <label class="mode-opt">
+                <input type="radio" name="mode" value="video" onchange="onModeChange()" />
+                <div class="mode-tile">
+                  <div class="mode-checkmark">✓</div>
+                  <div class="mode-tile-content">
+                    <span class="mode-icon">🎬</span>
+                    <span class="mode-name">Video</span>
+                    <span class="mode-desc">Merge full reels into one clip</span>
+                    <span class="mode-badge badge-mp4">MP4</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk paste -->
+        <div class="section-label">Bulk Paste</div>
+        <div class="bulk-card" id="bulkCard">
+          <div class="bulk-body">
+            <div class="bulk-header">
+              <div class="bulk-meta">
+                <span class="bulk-hint-pill">newline · space · comma</span>
+              </div>
+              <button class="bulk-clear" id="bulkClearBtn" onclick="clearBulk()">✕ Clear</button>
+            </div>
+            <textarea
+              class="bulk-textarea"
+              id="bulkInput"
+              placeholder="Paste all your links here…&#10;&#10;https://www.instagram.com/reel/ABC…&#10;https://www.instagram.com/reel/DEF…"
+              oninput="onBulkInput()"
+            ></textarea>
+            <div class="bulk-footer">
+              <span class="bulk-count" id="bulkCount">Paste links above to detect</span>
+              <button class="bulk-import-btn" id="bulkImportBtn" onclick="importBulk()" disabled>
+                ↓ Import into fields
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stitch button -->
+        <button class="stitch-btn" id="stitchBtn" onclick="startStitch()">
+          <span class="spinner" id="spinner"></span>
+          <span id="btnLabel">✦ Stitch Audio</span>
         </button>
+
+      </div><!-- /left-panel -->
+
+      <!-- ════ RIGHT PANEL ════ -->
+      <div class="right-panel">
+        <div class="section-label">Reel Links</div>
+        <div class="url-card" id="urlCard">
+          <div class="url-card-header">
+            <span class="url-card-title">Instagram Reel URLs</span>
+            <span class="link-counter" id="counter">0 / 30</span>
+          </div>
+          <div class="url-scroll-area">
+            <div class="url-list" id="urlList"></div>
+          </div>
+          <div class="add-row">
+            <div class="add-line"></div>
+            <button class="add-btn" id="addBtn" onclick="addField()">
+              + Add link
+            </button>
+            <div class="add-line"></div>
+          </div>
+        </div>
+      </div><!-- /right-panel -->
+
+    </div><!-- /workspace -->
+
+    <!-- ── Full-width bottom ── -->
+    <div class="bottom-area">
+
+      <!-- Log -->
+      <div class="log-card" id="logCard">
+        <div class="log-titlebar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <span class="log-label">Processing log</span>
+        </div>
+        <div class="log-body" id="logBody"></div>
       </div>
+
+      <!-- Download -->
+      <div class="download-card" id="downloadCard">
+        <div class="download-inner">
+          <div class="download-left">
+            <div class="dl-icon" id="dlIcon">🎧</div>
+            <div class="dl-text">
+              <h3 id="dlTitle">Your audio is ready!</h3>
+              <p id="dlDesc">All reels merged into a single MP3.</p>
+            </div>
+          </div>
+          <a href="#" class="download-btn" id="dlBtn">⬇ Download output.mp3</a>
+        </div>
+      </div>
+
     </div>
 
-    <!-- URL input card -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Reel Links</span>
-        <span class="link-counter" id="counter">0 / 30</span>
-      </div>
-      <div class="url-list" id="urlList"></div>
-      <div class="add-more-row">
-        <div class="add-more-line"></div>
-        <button class="add-btn" id="addBtn" onclick="addField()">
-          <span class="plus">+</span> Add link
-        </button>
-        <div class="add-more-line"></div>
-      </div>
-    </div>
-
-    <!-- Stitch button -->
-    <button class="stitch-btn" id="stitchBtn" onclick="startStitch()">
-      <span class="spinner" id="spinner"></span>
-      <span id="btnLabel">✦ Stitch Audio</span>
-    </button>
-
-    <!-- Log -->
-    <div class="log-card" id="logCard">
-      <div class="log-titlebar">
-        <div class="dot dot-r"></div>
-        <div class="dot dot-y"></div>
-        <div class="dot dot-g"></div>
-        <span class="log-label">Processing log</span>
-      </div>
-      <div class="log-body" id="logBody"></div>
-    </div>
-
-    <!-- Download -->
-    <div class="download-card" id="downloadCard">
-      <div class="success-icon" id="dlIcon">🎧</div>
-      <div>
-        <h3 id="dlTitle">Your audio is ready!</h3>
-        <p id="dlDesc">All reels have been merged into a single MP3.</p>
-      </div>
-      <a href="#" class="download-btn" id="dlBtn">⬇ Download output.mp3</a>
-    </div>
-
-  </div>
+  </div><!-- /page -->
 
   <script>
     const MAX = 30;
@@ -733,10 +902,9 @@
     }
 
     function onModeChange() {
-      const mode = getMode();
-      const isAudio = mode === 'audio';
-      document.getElementById('logoIcon').textContent   = isAudio ? '🎵' : '🎬';
-      document.getElementById('btnLabel').textContent   = isAudio ? '✦ Stitch Audio' : '✦ Stitch Video';
+      const isAudio = getMode() === 'audio';
+      document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
+      document.getElementById('btnLabel').textContent = isAudio ? '✦ Stitch Audio' : '✦ Stitch Video';
     }
 
     function updateCounter() {
@@ -763,7 +931,7 @@
         </div>
         ${n > DEFAULT
           ? `<button class="remove-btn" onclick="removeField(${n})" title="Remove">×</button>`
-          : `<div style="width:28px;flex-shrink:0"></div>`}
+          : `<div style="width:26px;flex-shrink:0"></div>`}
       `;
       list.appendChild(row);
       if (autofocus && n > DEFAULT) setTimeout(() => document.getElementById(`url${n}`)?.focus(), 50);
@@ -773,7 +941,7 @@
     function removeField(n) {
       const row = document.getElementById(`row-${n}`);
       if (!row) return;
-      row.style.animation = 'slideOut 0.18s ease forwards';
+      row.style.animation = 'rowOut 0.18s ease forwards';
       setTimeout(() => { row.remove(); renumber(); updateCounter(); }, 180);
     }
 
@@ -798,9 +966,7 @@
     }
 
     function ts() {
-      const d = new Date();
-      return [d.getHours(), d.getMinutes(), d.getSeconds()]
-        .map(v => String(v).padStart(2, '0')).join(':');
+      return new Date().toTimeString().slice(0,8);
     }
 
     function appendLog(text) {
@@ -809,8 +975,8 @@
       line.className = 'log-line';
       let cls = '';
       if (/\[ERROR\]/.test(text)) cls = 'err';
-      else if (/\[WARN\]/.test(text)) cls = 'warn';
-      else if (/\[OK\]/.test(text)) cls = 'ok';
+      else if (/\[WARN\]/.test(text))  cls = 'warn';
+      else if (/\[OK\]/.test(text))    cls = 'ok';
       else if (/^\[[\d/]+\]/.test(text)) cls = 'head';
       if (cls) line.classList.add(cls);
       line.innerHTML = `<span class="ts">${ts()}</span><span class="msg">${text}</span>`;
@@ -825,12 +991,12 @@
       document.getElementById('dlIcon').textContent  = isAudio ? '🎧' : '🎬';
       document.getElementById('dlTitle').textContent = isAudio ? 'Your audio is ready!' : 'Your video is ready!';
       document.getElementById('dlDesc').textContent  = isAudio
-        ? 'All reels have been merged into a single MP3.'
-        : 'All reels have been stitched into a single MP4.';
-      const dlBtn = document.getElementById('dlBtn');
-      dlBtn.textContent = `⬇ Download output.${ext}`;
-      dlBtn.href = `/download/${ext}`;
-      card.style.display = 'flex';
+        ? 'All reels merged into a single MP3.'
+        : 'All reels stitched into a single MP4.';
+      const btn = document.getElementById('dlBtn');
+      btn.textContent = `⬇ Download output.${ext}`;
+      btn.href = `/download/${ext}`;
+      card.style.display = 'block';
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -838,24 +1004,22 @@
       const urls = getURLs().filter(u => u.length > 0);
       if (urls.length === 0) {
         const first = document.getElementById('url1');
-        first.classList.add('error');
+        first.classList.add('shake');
         first.focus();
-        setTimeout(() => first.classList.remove('error'), 1500);
+        setTimeout(() => first.classList.remove('shake'), 400);
         return;
       }
 
-      const mode   = getMode();
-      const btn    = document.getElementById('stitchBtn');
-      const lbl    = document.getElementById('btnLabel');
-      const spin   = document.getElementById('spinner');
-      const logCard   = document.getElementById('logCard');
-      const dlCard    = document.getElementById('downloadCard');
+      const mode = getMode();
+      const btn  = document.getElementById('stitchBtn');
+      const lbl  = document.getElementById('btnLabel');
+      const spin = document.getElementById('spinner');
 
       btn.disabled = true;
       spin.style.display = 'block';
       lbl.textContent = 'Processing…';
-      logCard.style.display = 'block';
-      dlCard.style.display = 'none';
+      document.getElementById('logCard').style.display = 'block';
+      document.getElementById('downloadCard').style.display = 'none';
       document.getElementById('logBody').innerHTML = '';
 
       fetch('/stitch', {
@@ -877,7 +1041,7 @@
               const msg = line.slice(6);
               if (msg.startsWith('DONE:')) {
                 reset();
-                showDownload(msg.split(':')[1]); // 'mp3' or 'mp4'
+                showDownload(msg.split(':')[1]);
               } else {
                 appendLog(msg);
               }
@@ -898,13 +1062,9 @@
       }
     }
 
-    // ── Bulk paste ─────────────────────────────────────────────────────────
+    /* ── Bulk paste ── */
     function parseBulkLinks(raw) {
-      // Split on whitespace, commas, or newlines; keep only instagram reel URLs
-      return raw
-        .split(/[\s,]+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0 && s.startsWith('http'));
+      return raw.split(/[\s,]+/).map(s => s.trim()).filter(s => s.startsWith('http'));
     }
 
     function onBulkInput() {
@@ -912,51 +1072,42 @@
       const links = parseBulkLinks(raw);
       const count = document.getElementById('bulkCount');
       const btn   = document.getElementById('bulkImportBtn');
-      const clearBtn = document.getElementById('bulkClearBtn');
+      const clr   = document.getElementById('bulkClearBtn');
 
-      clearBtn.style.display = raw.trim() ? 'block' : 'none';
+      clr.style.display = raw.trim() ? 'inline' : 'none';
 
-      if (links.length === 0) {
-        count.textContent = 'Detected links will appear here';
+      if (!links.length) {
+        count.textContent = 'Paste links above to detect';
         count.classList.remove('has-links');
         btn.disabled = true;
       } else {
-        const capped = Math.min(links.length, MAX);
         count.textContent = links.length > MAX
-          ? `${links.length} links detected — first ${MAX} will be imported`
-          : `${links.length} link${links.length > 1 ? 's' : ''} detected`;
+          ? `${links.length} links — first ${MAX} will be imported`
+          : `${links.length} link${links.length !== 1 ? 's' : ''} detected`;
         count.classList.add('has-links');
         btn.disabled = false;
       }
     }
 
     function importBulk() {
-      const raw   = document.getElementById('bulkInput').value;
-      const links = parseBulkLinks(raw).slice(0, MAX);
+      const links = parseBulkLinks(document.getElementById('bulkInput').value).slice(0, MAX);
       if (!links.length) return;
 
-      // Clear existing URL fields and rebuild
       document.getElementById('urlList').innerHTML = '';
       fieldCount = 0;
 
-      // Add enough fields for all links (min DEFAULT)
       const total = Math.max(links.length, DEFAULT);
       for (let i = 0; i < total; i++) addField(false);
 
-      // Fill in the values
-      const inputs = document.querySelectorAll('.url-row input[type="url"]');
-      links.forEach((url, i) => {
-        if (inputs[i]) inputs[i].value = url;
+      document.querySelectorAll('.url-row input[type="url"]').forEach((inp, i) => {
+        if (links[i]) inp.value = links[i];
       });
 
       updateCounter();
 
-      // Visual feedback: flash the URL card
-      const card = document.querySelector('.card');
-      card.classList.add('bulk-flash');
-      setTimeout(() => card.classList.remove('bulk-flash'), 700);
-
-      // Scroll to URL list
+      const card = document.getElementById('urlCard');
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 800);
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -965,21 +1116,18 @@
       onBulkInput();
     }
 
-    // Drag-and-drop text onto bulk card
+    // Drag & drop text onto bulk card
     const bulkCard = document.getElementById('bulkCard');
-    bulkCard.addEventListener('dragover', e => { e.preventDefault(); bulkCard.classList.add('drag-over'); });
+    bulkCard.addEventListener('dragover',  e => { e.preventDefault(); bulkCard.classList.add('drag-over'); });
     bulkCard.addEventListener('dragleave', () => bulkCard.classList.remove('drag-over'));
     bulkCard.addEventListener('drop', e => {
       e.preventDefault();
       bulkCard.classList.remove('drag-over');
       const text = e.dataTransfer.getData('text');
-      if (text) {
-        document.getElementById('bulkInput').value = text;
-        onBulkInput();
-      }
+      if (text) { document.getElementById('bulkInput').value = text; onBulkInput(); }
     });
 
-    // Init
+    // Init default fields
     for (let i = 0; i < DEFAULT; i++) addField(false);
   </script>
 </body>
