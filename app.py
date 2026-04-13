@@ -32,7 +32,7 @@ def pipeline(urls):
             yield sse(f"[ERROR] '{dep}' not found on PATH. Install it and retry.")
             return
 
-    urls = [u.strip() for u in urls if u and u.strip()][:10]
+    urls = [u.strip() for u in urls if u and u.strip()][:30]
     if not urls:
         yield sse("[ERROR] No URLs provided.")
         return
