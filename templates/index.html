@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InstaAudioStitch</title>
+  <title>InstaStitch</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -16,7 +16,6 @@
       --surface: #0f0f1a;
       --surface2: #161625;
       --border: rgba(255,255,255,0.07);
-      --border-focus: rgba(131,52,175,0.6);
       --text: #f0f0f8;
       --text-muted: #6b6b8a;
       --success: #4ade80;
@@ -39,7 +38,6 @@
       overflow-x: hidden;
     }
 
-    /* ── ambient glow ── */
     body::before {
       content: '';
       position: fixed;
@@ -59,10 +57,10 @@
       padding-top: 56px;
     }
 
-    /* ── header ── */
+    /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
     }
 
     .logo {
@@ -79,6 +77,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
       box-shadow: 0 0 24px rgba(221,42,123,0.35);
+      transition: transform 0.3s ease;
     }
 
     h1 {
@@ -93,29 +92,27 @@
     .subtitle {
       color: var(--text-muted);
       font-size: 0.88rem;
-      font-weight: 400;
       line-height: 1.5;
     }
 
-    /* ── card ── */
+    /* ── Card ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 28px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(12px);
+      padding: 24px 28px;
+      margin-bottom: 14px;
     }
 
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .card-title {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -123,7 +120,7 @@
     }
 
     .link-counter {
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       font-weight: 600;
       color: var(--purple);
       background: rgba(167,139,250,0.1);
@@ -132,7 +129,92 @@
       border-radius: 20px;
     }
 
-    /* ── url inputs ── */
+    /* ── Mode Toggle ── */
+    .mode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 28px;
+      margin-bottom: 14px;
+    }
+
+    .mode-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mode-opt {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .mode-opt input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+
+    .mode-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+      user-select: none;
+    }
+
+    .mode-tile:hover { border-color: rgba(167,139,250,0.3); transform: translateY(-1px); }
+
+    .mode-opt input:checked ~ .mode-tile {
+      border-color: var(--ig3);
+      background: rgba(131,52,175,0.1);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.12), inset 0 0 20px rgba(131,52,175,0.05);
+    }
+
+    .mode-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .mode-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .mode-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .mode-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+
+    .badge-mp3 { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+    .badge-mp4 { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+
+    /* ── URL inputs ── */
     .url-list {
       display: flex;
       flex-direction: column;
@@ -143,12 +225,16 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      animation: slideIn 0.25s ease;
+      animation: slideIn 0.22s ease;
     }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-8px); }
+      from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideOut {
+      to { opacity: 0; transform: translateY(-6px); }
     }
 
     .url-num {
@@ -170,11 +256,13 @@
       position: absolute;
       left: 12px; top: 50%;
       transform: translateY(-50%);
-      font-size: 14px;
-      opacity: 0.35;
+      font-size: 13px;
+      opacity: 0.3;
       pointer-events: none;
       transition: opacity 0.2s;
     }
+
+    .url-input-wrap:focus-within .ig-icon { opacity: 0.65; }
 
     input[type="url"] {
       width: 100%;
@@ -184,43 +272,38 @@
       color: var(--text);
       font-size: 0.84rem;
       font-family: inherit;
-      padding: 11px 14px 11px 36px;
+      padding: 11px 14px 11px 34px;
       outline: none;
       transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     }
 
     input[type="url"]:focus {
-      border-color: var(--border-focus);
+      border-color: rgba(131,52,175,0.6);
       background: #1a1a2e;
-      box-shadow: 0 0 0 3px rgba(131,52,175,0.12);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.1);
     }
 
-    input[type="url"]:focus + .ig-icon,
-    .url-input-wrap:focus-within .ig-icon {
-      opacity: 0.7;
-    }
-
-    input[type="url"]::placeholder { color: #3a3a55; }
+    input[type="url"].error { border-color: rgba(248,113,113,0.6) !important; }
+    input[type="url"]::placeholder { color: #2e2e48; }
 
     .remove-btn {
       width: 28px; height: 28px;
       flex-shrink: 0;
-      background: rgba(248,113,113,0.08);
-      border: 1px solid rgba(248,113,113,0.15);
+      background: rgba(248,113,113,0.07);
+      border: 1px solid rgba(248,113,113,0.12);
       border-radius: 8px;
       color: var(--err);
       font-size: 16px;
-      line-height: 1;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s, border-color 0.2s;
+      transition: background 0.2s, border-color 0.2s, opacity 0.2s;
       opacity: 0;
     }
 
     .url-row:hover .remove-btn { opacity: 1; }
     .remove-btn:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.35); }
 
-    /* ── add more button ── */
+    /* ── Add more ── */
     .add-more-row {
       display: flex;
       align-items: center;
@@ -228,18 +311,14 @@
       margin-top: 12px;
     }
 
-    .add-more-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .add-more-line { flex: 1; height: 1px; background: var(--border); }
 
     .add-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(167,139,250,0.08);
-      border: 1px solid rgba(167,139,250,0.2);
+      background: rgba(167,139,250,0.07);
+      border: 1px solid rgba(167,139,250,0.18);
       border-radius: 20px;
       color: var(--purple);
       font-size: 0.78rem;
@@ -250,12 +329,12 @@
       font-family: inherit;
     }
 
-    .add-btn:hover { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.4); transform: translateY(-1px); }
-    .add-btn:active { transform: translateY(0); }
+    .add-btn:hover { background: rgba(167,139,250,0.14); border-color: rgba(167,139,250,0.38); transform: translateY(-1px); }
+    .add-btn:active { transform: none; }
     .add-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-    .add-btn .plus { font-size: 16px; font-weight: 300; }
+    .add-btn .plus { font-size: 15px; font-weight: 400; }
 
-    /* ── stitch button ── */
+    /* ── Stitch button ── */
     .stitch-btn {
       width: 100%;
       padding: 16px;
@@ -270,104 +349,98 @@
       cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 10px;
       transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 4px 24px rgba(221,42,123,0.3);
-      margin-bottom: 16px;
+      box-shadow: 0 4px 24px rgba(221,42,123,0.28);
+      margin-bottom: 14px;
       position: relative;
       overflow: hidden;
     }
 
     .stitch-btn::before {
       content: '';
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.2s;
+      opacity: 0; transition: opacity 0.2s;
     }
 
     .stitch-btn:hover::before { opacity: 1; }
-    .stitch-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(221,42,123,0.4); }
-    .stitch-btn:active { transform: translateY(0); }
-    .stitch-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .stitch-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(221,42,123,0.38); }
+    .stitch-btn:active { transform: none; }
+    .stitch-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    /* ── spinner ── */
     .spinner {
       width: 18px; height: 18px;
       border: 2px solid rgba(255,255,255,0.3);
       border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.65s linear infinite;
-      display: none;
-      flex-shrink: 0;
+      display: none; flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── log card ── */
+    /* ── Log card ── */
     .log-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
       overflow: hidden;
       display: none;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .log-titlebar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 18px;
+      display: flex; align-items: center; gap: 7px;
+      padding: 11px 16px;
       background: var(--surface2);
       border-bottom: 1px solid var(--border);
     }
 
     .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red   { background: #ff5f57; }
-    .dot-yellow{ background: #febc2e; }
-    .dot-green { background: #28c840; }
+    .dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
 
-    .log-label {
-      font-size: 0.73rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      margin-left: 4px;
-    }
+    .log-label { font-size: 0.72rem; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
 
     .log-body {
-      padding: 16px 18px;
+      padding: 14px 16px;
       height: 220px;
       overflow-y: auto;
-      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-      font-size: 0.76rem;
-      line-height: 1.7;
-      color: #8888aa;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+      line-height: 1.75;
+      color: #6b6b8a;
       scrollbar-width: thin;
       scrollbar-color: #2a2a40 transparent;
     }
 
     .log-body::-webkit-scrollbar { width: 4px; }
-    .log-body::-webkit-scrollbar-track { background: transparent; }
     .log-body::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 4px; }
 
-    .log-line { display: flex; gap: 8px; }
-    .log-line .ts { color: #3a3a55; flex-shrink: 0; }
+    .log-line { display: flex; gap: 10px; }
+    .log-line .ts { color: #2e2e48; flex-shrink: 0; }
     .log-line.ok   .msg { color: var(--success); }
     .log-line.warn .msg { color: var(--warn); }
     .log-line.err  .msg { color: var(--err); }
     .log-line.head .msg { color: var(--purple); font-weight: 600; }
 
-    /* ── download card ── */
+    /* ── Download card ── */
     .download-card {
-      background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02));
-      border: 1px solid rgba(74,222,128,0.2);
       border-radius: 20px;
-      padding: 24px 28px;
+      padding: 28px;
       display: none;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       text-align: center;
       animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .download-card.audio-result {
+      background: linear-gradient(135deg, rgba(74,222,128,0.06), rgba(74,222,128,0.02));
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+
+    .download-card.video-result {
+      background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(96,165,250,0.02));
+      border: 1px solid rgba(96,165,250,0.2);
     }
 
     @keyframes popIn {
@@ -376,41 +449,36 @@
     }
 
     .success-icon {
-      width: 52px; height: 52px;
-      background: rgba(74,222,128,0.12);
-      border: 1.5px solid rgba(74,222,128,0.3);
+      width: 54px; height: 54px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
+      font-size: 26px;
     }
 
-    .download-card h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--success);
-    }
+    .audio-result .success-icon { background: rgba(74,222,128,0.1); border: 1.5px solid rgba(74,222,128,0.25); }
+    .video-result .success-icon { background: rgba(96,165,250,0.1); border: 1.5px solid rgba(96,165,250,0.25); }
 
-    .download-card p {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
+    .download-card h3 { font-size: 1rem; font-weight: 700; }
+    .audio-result h3 { color: var(--success); }
+    .video-result h3 { color: #60a5fa; }
+
+    .download-card p { font-size: 0.82rem; color: var(--text-muted); }
 
     .download-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--success);
-      color: #000;
+      display: inline-flex; align-items: center; gap: 8px;
       font-family: inherit;
       font-size: 0.88rem;
       font-weight: 700;
       padding: 12px 28px;
       border-radius: 12px;
       text-decoration: none;
-      transition: background 0.2s, transform 0.15s;
+      transition: transform 0.15s, filter 0.2s;
     }
 
-    .download-btn:hover { background: #86efac; transform: translateY(-1px); }
+    .download-btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+    .audio-result .download-btn { background: var(--success); color: #000; }
+    .video-result .download-btn { background: #60a5fa; color: #000; }
   </style>
 </head>
 <body>
@@ -419,10 +487,38 @@
     <!-- Header -->
     <div class="header">
       <div class="logo">
-        <div class="logo-icon">🎵</div>
-        <h1>InstaAudioStitch</h1>
+        <div class="logo-icon" id="logoIcon">🎵</div>
+        <h1 id="appTitle">InstaStitch</h1>
       </div>
-      <p class="subtitle">Paste Instagram Reel links and merge their audio into one MP3 file.</p>
+      <p class="subtitle">Paste Instagram Reel links and merge them into one file.</p>
+    </div>
+
+    <!-- Output Mode Toggle -->
+    <div class="mode-card">
+      <div class="mode-label">Output Format</div>
+      <div class="mode-toggle">
+
+        <label class="mode-opt">
+          <input type="radio" name="mode" value="audio" checked onchange="onModeChange()" />
+          <div class="mode-tile">
+            <span class="mode-icon">🎵</span>
+            <span class="mode-name">Audio</span>
+            <span class="mode-desc">Extract &amp; merge audio tracks</span>
+            <span class="mode-badge badge-mp3">MP3</span>
+          </div>
+        </label>
+
+        <label class="mode-opt">
+          <input type="radio" name="mode" value="video" onchange="onModeChange()" />
+          <div class="mode-tile">
+            <span class="mode-icon">🎬</span>
+            <span class="mode-name">Video</span>
+            <span class="mode-desc">Merge full reels into one clip</span>
+            <span class="mode-badge badge-mp4">MP4</span>
+          </div>
+        </label>
+
+      </div>
     </div>
 
     <!-- URL input card -->
@@ -431,10 +527,8 @@
         <span class="card-title">Reel Links</span>
         <span class="link-counter" id="counter">0 / 30</span>
       </div>
-
       <div class="url-list" id="urlList"></div>
-
-      <div class="add-more-row" id="addMoreRow">
+      <div class="add-more-row">
         <div class="add-more-line"></div>
         <button class="add-btn" id="addBtn" onclick="addField()">
           <span class="plus">+</span> Add link
@@ -449,25 +543,25 @@
       <span id="btnLabel">✦ Stitch Audio</span>
     </button>
 
-    <!-- Log card -->
+    <!-- Log -->
     <div class="log-card" id="logCard">
       <div class="log-titlebar">
-        <div class="dot dot-red"></div>
-        <div class="dot dot-yellow"></div>
-        <div class="dot dot-green"></div>
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
         <span class="log-label">Processing log</span>
       </div>
       <div class="log-body" id="logBody"></div>
     </div>
 
-    <!-- Download card -->
+    <!-- Download -->
     <div class="download-card" id="downloadCard">
-      <div class="success-icon">🎧</div>
+      <div class="success-icon" id="dlIcon">🎧</div>
       <div>
-        <h3>Your audio is ready!</h3>
-        <p>All reels have been merged into a single MP3.</p>
+        <h3 id="dlTitle">Your audio is ready!</h3>
+        <p id="dlDesc">All reels have been merged into a single MP3.</p>
       </div>
-      <a href="/download" class="download-btn">⬇ Download output.mp3</a>
+      <a href="#" class="download-btn" id="dlBtn">⬇ Download output.mp3</a>
     </div>
 
   </div>
@@ -476,6 +570,17 @@
     const MAX = 30;
     const DEFAULT = 5;
     let fieldCount = 0;
+
+    function getMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
+    }
+
+    function onModeChange() {
+      const mode = getMode();
+      const isAudio = mode === 'audio';
+      document.getElementById('logoIcon').textContent   = isAudio ? '🎵' : '🎬';
+      document.getElementById('btnLabel').textContent   = isAudio ? '✦ Stitch Audio' : '✦ Stitch Video';
+    }
 
     function updateCounter() {
       const filled = getURLs().filter(u => u).length;
@@ -486,13 +591,11 @@
     function addField(autofocus = true) {
       if (fieldCount >= MAX) return;
       fieldCount++;
-
+      const n = fieldCount;
       const list = document.getElementById('urlList');
       const row = document.createElement('div');
       row.className = 'url-row';
-      row.id = `row-${fieldCount}`;
-
-      const n = fieldCount;
+      row.id = `row-${n}`;
       row.innerHTML = `
         <span class="url-num">${n}</span>
         <div class="url-input-wrap">
@@ -501,92 +604,95 @@
             oninput="updateCounter()" />
           <span class="ig-icon">📎</span>
         </div>
-        ${n > DEFAULT ? `<button class="remove-btn" onclick="removeField(${n})" title="Remove">×</button>` : '<div style="width:28px;flex-shrink:0"></div>'}
+        ${n > DEFAULT
+          ? `<button class="remove-btn" onclick="removeField(${n})" title="Remove">×</button>`
+          : `<div style="width:28px;flex-shrink:0"></div>`}
       `;
-
       list.appendChild(row);
-      if (autofocus && n > DEFAULT) {
-        setTimeout(() => document.getElementById(`url${n}`).focus(), 50);
-      }
+      if (autofocus && n > DEFAULT) setTimeout(() => document.getElementById(`url${n}`)?.focus(), 50);
       updateCounter();
     }
 
     function removeField(n) {
       const row = document.getElementById(`row-${n}`);
-      if (row) {
-        row.style.animation = 'slideOut 0.18s ease forwards';
-        setTimeout(() => {
-          row.remove();
-          fieldCount--;
-          renumberFields();
-          updateCounter();
-        }, 180);
-      }
+      if (!row) return;
+      row.style.animation = 'slideOut 0.18s ease forwards';
+      setTimeout(() => { row.remove(); renumber(); updateCounter(); }, 180);
     }
 
-    // Add slide-out keyframe dynamically
-    const style = document.createElement('style');
-    style.textContent = `@keyframes slideOut {
-      to { opacity: 0; transform: translateY(-6px); max-height: 0; margin: 0; padding: 0; }
-    }`;
-    document.head.appendChild(style);
-
-    function renumberFields() {
+    function renumber() {
       const rows = document.querySelectorAll('.url-row');
       fieldCount = rows.length;
       rows.forEach((row, i) => {
-        const num = i + 1;
-        row.id = `row-${num}`;
-        const inp = row.querySelector('input');
+        const n = i + 1;
+        row.id = `row-${n}`;
+        const inp  = row.querySelector('input');
         const span = row.querySelector('.url-num');
-        if (inp) { inp.id = `url${num}`; }
-        if (span) span.textContent = num;
-        const rmBtn = row.querySelector('.remove-btn');
-        if (rmBtn) rmBtn.setAttribute('onclick', `removeField(${num})`);
+        const btn  = row.querySelector('.remove-btn');
+        if (inp)  inp.id = `url${n}`;
+        if (span) span.textContent = n;
+        if (btn)  btn.setAttribute('onclick', `removeField(${n})`);
       });
     }
 
     function getURLs() {
-      const inputs = document.querySelectorAll('.url-row input[type="url"]');
-      return Array.from(inputs).map(i => i.value.trim());
+      return Array.from(document.querySelectorAll('.url-row input[type="url"]'))
+                  .map(i => i.value.trim());
     }
 
-    function nowStr() {
+    function ts() {
       const d = new Date();
-      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+      return [d.getHours(), d.getMinutes(), d.getSeconds()]
+        .map(v => String(v).padStart(2, '0')).join(':');
     }
 
     function appendLog(text) {
       const body = document.getElementById('logBody');
       const line = document.createElement('div');
       line.className = 'log-line';
-
       let cls = '';
-      if (text.startsWith('[ERROR]') || text.includes('[ERROR]')) cls = 'err';
-      else if (text.startsWith('[WARN]') || text.includes('[WARN]')) cls = 'warn';
-      else if (text.startsWith('[OK]') || text.includes('[OK]')) cls = 'ok';
+      if (/\[ERROR\]/.test(text)) cls = 'err';
+      else if (/\[WARN\]/.test(text)) cls = 'warn';
+      else if (/\[OK\]/.test(text)) cls = 'ok';
       else if (/^\[[\d/]+\]/.test(text)) cls = 'head';
       if (cls) line.classList.add(cls);
-
-      line.innerHTML = `<span class="ts">${nowStr()}</span><span class="msg">${text}</span>`;
+      line.innerHTML = `<span class="ts">${ts()}</span><span class="msg">${text}</span>`;
       body.appendChild(line);
       body.scrollTop = body.scrollHeight;
+    }
+
+    function showDownload(ext) {
+      const card  = document.getElementById('downloadCard');
+      const isAudio = ext === 'mp3';
+      card.className = `download-card ${isAudio ? 'audio-result' : 'video-result'}`;
+      document.getElementById('dlIcon').textContent  = isAudio ? '🎧' : '🎬';
+      document.getElementById('dlTitle').textContent = isAudio ? 'Your audio is ready!' : 'Your video is ready!';
+      document.getElementById('dlDesc').textContent  = isAudio
+        ? 'All reels have been merged into a single MP3.'
+        : 'All reels have been stitched into a single MP4.';
+      const dlBtn = document.getElementById('dlBtn');
+      dlBtn.textContent = `⬇ Download output.${ext}`;
+      dlBtn.href = `/download/${ext}`;
+      card.style.display = 'flex';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function startStitch() {
       const urls = getURLs().filter(u => u.length > 0);
       if (urls.length === 0) {
-        document.getElementById('url1').focus();
-        document.getElementById('url1').style.borderColor = 'rgba(248,113,113,0.6)';
-        setTimeout(() => document.getElementById('url1').style.borderColor = '', 1500);
+        const first = document.getElementById('url1');
+        first.classList.add('error');
+        first.focus();
+        setTimeout(() => first.classList.remove('error'), 1500);
         return;
       }
 
-      const btn   = document.getElementById('stitchBtn');
-      const lbl   = document.getElementById('btnLabel');
-      const spin  = document.getElementById('spinner');
-      const logCard  = document.getElementById('logCard');
-      const dlCard   = document.getElementById('downloadCard');
+      const mode   = getMode();
+      const btn    = document.getElementById('stitchBtn');
+      const lbl    = document.getElementById('btnLabel');
+      const spin   = document.getElementById('spinner');
+      const logCard   = document.getElementById('logCard');
+      const dlCard    = document.getElementById('downloadCard');
 
       btn.disabled = true;
       spin.style.display = 'block';
@@ -598,7 +704,7 @@
       fetch('/stitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: getURLs() }),
+        body: JSON.stringify({ urls: getURLs(), mode }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
@@ -606,24 +712,15 @@
 
         function read() {
           reader.read().then(({ done, value }) => {
-            if (done) {
-              btn.disabled = false;
-              spin.style.display = 'none';
-              lbl.textContent = '✦ Stitch Audio';
-              return;
-            }
+            if (done) { reset(); return; }
             buf += dec.decode(value, { stream: true });
-            const lines = buf.split('\n');
-            buf = lines.pop();
+            const lines = buf.split('\n'); buf = lines.pop();
             for (const line of lines) {
               if (!line.startsWith('data: ')) continue;
               const msg = line.slice(6);
-              if (msg === 'DONE') {
-                btn.disabled = false;
-                spin.style.display = 'none';
-                lbl.textContent = '✦ Stitch Audio';
-                dlCard.style.display = 'flex';
-                dlCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              if (msg.startsWith('DONE:')) {
+                reset();
+                showDownload(msg.split(':')[1]); // 'mp3' or 'mp4'
               } else {
                 appendLog(msg);
               }
@@ -634,13 +731,17 @@
         read();
       }).catch(err => {
         appendLog(`[ERROR] ${err}`);
+        reset();
+      });
+
+      function reset() {
         btn.disabled = false;
         spin.style.display = 'none';
-        lbl.textContent = '✦ Stitch Audio';
-      });
+        lbl.textContent = getMode() === 'audio' ? '✦ Stitch Audio' : '✦ Stitch Video';
+      }
     }
 
-    // Init default fields
+    // Init
     for (let i = 0; i < DEFAULT; i++) addField(false);
   </script>
 </body>
