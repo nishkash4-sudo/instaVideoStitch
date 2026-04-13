@@ -44,8 +44,8 @@ echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 brew install ffmpeg yt-dlp
 
 # 4. Clone the repo
-git clone https://github.com/nishkash4-sudo/instaVideoStitch.git
-cd instaVideoStitch
+git clone https://github.com/nishkash4-sudo/InstaStitch.git
+cd InstaStitch
 
 # 5. Create a virtual environment and install Flask
 python3 -m venv venv
@@ -57,7 +57,7 @@ venv/bin/pip install flask
 ## Usage
 
 ```bash
-cd ~/Desktop/instaVideoStitch
+cd ~/Desktop/InstaStitch
 venv/bin/python app.py
 ```
 
@@ -110,7 +110,7 @@ Instagram Reel URLs
 ## Project Structure
 
 ```
-instaVideoStitch/
+InstaStitch/
 ├── app.py              # Flask server + download/normalize/merge pipeline
 ├── templates/
 │   └── index.html      # Single-page UI
