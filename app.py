@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, Response, send_file
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_FILE = os.path.join(BASE_DIR, "output.mp4")
+OUTPUT_FILE = os.path.join(BASE_DIR, "output.mp3")
 
 
 def check_dependency(cmd):
@@ -38,9 +38,9 @@ def pipeline(urls):
         return
 
     # Clean any leftover files from a previous run
-    for f in glob.glob(os.path.join(BASE_DIR, "clip_*.mp4")):
+    for f in glob.glob(os.path.join(BASE_DIR, "clip_*.mp3")):
         os.remove(f)
-    for f in glob.glob(os.path.join(BASE_DIR, "norm_*.mp4")):
+    for f in glob.glob(os.path.join(BASE_DIR, "norm_*.mp3")):
         os.remove(f)
     filelist = os.path.join(BASE_DIR, "filelist.txt")
     if os.path.exists(filelist):
@@ -48,16 +48,17 @@ def pipeline(urls):
     if os.path.exists(OUTPUT_FILE):
         os.remove(OUTPUT_FILE)
 
-    # --- download ---
-    yield sse(f"[1/3] Downloading {len(urls)} reel(s)...")
+    # --- download audio ---
+    yield sse(f"[1/3] Downloading audio from {len(urls)} reel(s)...")
     downloaded = []
     for i, url in enumerate(urls, start=1):
-        out_path = os.path.join(BASE_DIR, f"clip_{i}.mp4")
+        out_path = os.path.join(BASE_DIR, f"clip_{i}.mp3")
         yield sse(f"  Downloading clip {i}/{len(urls)}: {url}")
         code, _, stderr = run_cmd([
             "yt-dlp",
-            "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-            "--merge-output-format", "mp4",
+            "-x",                        # extract audio only
+            "--audio-format", "mp3",
+            "--audio-quality", "0",      # best quality
             "-o", out_path,
             url,
         ])
@@ -71,23 +72,19 @@ def pipeline(urls):
         yield sse("[ERROR] No clips were downloaded successfully.")
         return
 
-    # --- normalize ---
-    yield sse(f"[2/3] Normalizing {len(downloaded)} clip(s) to 1080x1920 / 30fps / H.264+AAC...")
+    # --- normalize audio ---
+    yield sse(f"[2/3] Normalizing {len(downloaded)} clip(s) to 192kbps / 44.1kHz / stereo...")
     normalized = []
     for i, clip_path in downloaded:
-        norm_path = os.path.join(BASE_DIR, f"norm_{i}.mp4")
+        norm_path = os.path.join(BASE_DIR, f"norm_{i}.mp3")
         yield sse(f"  Normalizing clip {i}...")
         code, _, stderr = run_cmd([
             "ffmpeg", "-y",
             "-i", clip_path,
-            "-vf", (
-                "scale=1080:1920:force_original_aspect_ratio=decrease,"
-                "pad=1080:1920:(ow-iw)/2:(oh-ih)/2,"
-                "fps=30"
-            ),
-            "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-            "-c:a", "aac", "-b:a", "128k",
-            "-movflags", "+faststart",
+            "-c:a", "libmp3lame",
+            "-b:a", "192k",
+            "-ar", "44100",   # sample rate
+            "-ac", "2",       # stereo
             norm_path,
         ])
         if code != 0 or not os.path.exists(norm_path):
@@ -102,7 +99,7 @@ def pipeline(urls):
         return
 
     # --- concat ---
-    yield sse(f"[3/3] Merging {len(normalized)} clip(s) into output.mp4...")
+    yield sse(f"[3/3] Merging {len(normalized)} clip(s) into output.mp3...")
     with open(filelist, "w") as f:
         for p in normalized:
             f.write(f"file '{p}'\n")
@@ -158,8 +155,8 @@ def stitch():
 @app.route("/download")
 def download():
     if not os.path.exists(OUTPUT_FILE):
-        return "output.mp4 not found", 404
-    return send_file(OUTPUT_FILE, as_attachment=True, download_name="output.mp4")
+        return "output.mp3 not found", 404
+    return send_file(OUTPUT_FILE, as_attachment=True, download_name="output.mp3")
 
 
 if __name__ == "__main__":

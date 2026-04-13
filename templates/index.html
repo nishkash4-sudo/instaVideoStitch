@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InstaVideoStitch</title>
+  <title>InstaAudioStitch</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -156,21 +156,21 @@
 </head>
 <body>
   <div class="container">
-    <h1>InstaVideoStitch</h1>
-    <p class="subtitle">Paste up to 10 Instagram Reel URLs and stitch them into one video.</p>
+    <h1>InstaAudioStitch</h1>
+    <p class="subtitle">Paste up to 10 Instagram Reel URLs and stitch their audio into one MP3.</p>
 
     <label>Reel URLs</label>
     <div class="url-list" id="urlList"></div>
 
     <button class="btn btn-stitch" id="stitchBtn" onclick="startStitch()">
       <span class="spinner" id="spinner"></span>
-      <span id="btnLabel">Stitch Videos</span>
+      <span id="btnLabel">Stitch Audio</span>
     </button>
 
     <div class="log-box" id="logBox"></div>
 
     <a href="/download" id="downloadBtn" class="btn btn-download">
-      Download output.mp4
+      Download output.mp3
     </a>
   </div>
 
@@ -246,7 +246,7 @@
             if (done) {
               btn.disabled = false;
               spinner.style.display = "none";
-              btnLabel.textContent = "Stitch Videos";
+              btnLabel.textContent = "Stitch Audio";
               return;
             }
             buffer += decoder.decode(value, { stream: true });
@@ -259,7 +259,7 @@
                   downloadBtn.style.display = "flex";
                   btn.disabled = false;
                   spinner.style.display = "none";
-                  btnLabel.textContent = "Stitch Videos";
+                  btnLabel.textContent = "Stitch Audio";
                 } else {
                   appendLog(msg);
                 }
@@ -273,7 +273,7 @@
         appendLog(`[ERROR] Request failed: ${err}`);
         btn.disabled = false;
         spinner.style.display = "none";
-        btnLabel.textContent = "Stitch Videos";
+        btnLabel.textContent = "Stitch Audio";
       });
     }
   </script>
