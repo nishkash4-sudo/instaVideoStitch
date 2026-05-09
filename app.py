@@ -193,6 +193,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         "-f", "bestvideo+bestaudio/best",
         "--merge-output-format", "mp4",
         "--print", "description",          # prints description to stdout, no extra call
+        "--no-simulate",                   # --print implies --simulate in subprocess; override it
         "-o", raw_path, url,
     ])
     if code != 0 or not os.path.exists(raw_path):
@@ -527,6 +528,7 @@ def single_download(url, mode="audio", transcribe=False):
             "yt-dlp",
             "-x", "--audio-format", "mp3", "--audio-quality", "0",
             "--print", "description",
+            "--no-simulate",               # --print implies --simulate in subprocess; override it
             "-o", output, url,
         ]
     else:
@@ -538,6 +540,7 @@ def single_download(url, mode="audio", transcribe=False):
             "-f", "bestvideo+bestaudio/best",
             "--merge-output-format", "mp4",
             "--print", "description",
+            "--no-simulate",               # --print implies --simulate in subprocess; override it
             "-o", raw_output, url,
         ]
 
