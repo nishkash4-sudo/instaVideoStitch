@@ -1120,6 +1120,23 @@
       text-decoration: none;
     }
 
+    /* ── Font pills ── */
+    .font-pill {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      text-align: center;
+      transition: all 0.2s;
+      font-size: 0.82rem;
+    }
+    .font-pill:hover { border-color: rgba(167,139,250,0.35); }
+    .font-pill.active {
+      border-color: var(--ig3);
+      background: rgba(131,52,175,0.08);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.08);
+    }
+
     /* ── Quality badge ── */
     .quality-badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -1177,6 +1194,10 @@
       <div class="app-tab-divider"></div>
       <button class="app-tab" id="tabStitch" onclick="switchAppMode('stitch')">
         <span class="tab-icon">✦</span> Multi Stitch
+      </button>
+      <div class="app-tab-divider"></div>
+      <button class="app-tab" id="tabMeme" onclick="switchAppMode('meme')">
+        <span class="tab-icon">🎬</span> Meme Edit
       </button>
     </div>
 
@@ -1453,6 +1474,139 @@
 
     </div><!-- /stitchPanel -->
 
+    <!-- ════ MEME EDIT PANEL ════ -->
+    <div class="app-panel hidden" id="memePanel">
+      <div class="single-layout">
+
+        <!-- URL + text inputs card -->
+        <div class="single-url-card">
+          <div class="single-url-card-header">
+            <div class="header-icon">🎬</div>
+            <div>
+              <h2>Meme Edit</h2>
+              <p>Download reel · add caption header · watermark · export as 1080×1920</p>
+            </div>
+          </div>
+          <div class="single-url-body">
+
+            <!-- URL input -->
+            <div class="single-input-wrap" style="margin-bottom:14px">
+              <span class="ig-prefix">📎</span>
+              <input
+                type="url"
+                class="single-url-input"
+                id="memeUrl"
+                placeholder="https://www.instagram.com/reel/..."
+              />
+            </div>
+
+            <!-- Meme text -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Meme Caption</div>
+              <textarea
+                id="memeText"
+                rows="3"
+                oninput="updateMemePreview()"
+                placeholder="Type your meme caption here…&#10;Text will be auto-wrapped and placed at the top."
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;resize:vertical;transition:all 0.2s;line-height:1.6;"
+                onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
+                onblur="this.style.borderColor='';this.style.boxShadow=''"
+              ></textarea>
+              <div id="memePreview" style="margin-top:6px;font-size:0.7rem;color:var(--text-dim);font-family:'SF Mono','Fira Code',monospace;">
+                Start typing to preview layout…
+              </div>
+            </div>
+
+            <!-- Watermark -->
+            <div style="margin-bottom:6px">
+              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Watermark <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(optional)</span></div>
+              <input
+                type="text"
+                id="memeWatermark"
+                placeholder="@yourhandle"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;transition:all 0.2s;"
+                onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
+                onblur="this.style.borderColor='';this.style.boxShadow=''"
+              />
+            </div>
+
+            <!-- Font selector -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Font Style</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="fontSelector">
+                <label style="cursor:pointer">
+                  <input type="radio" name="memeFont" value="impact" checked style="display:none" />
+                  <div class="font-pill active" data-font="impact" onclick="selectFont(this)">
+                    <span style="font-weight:900;letter-spacing:0.02em">Impact</span>
+                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Classic meme</span>
+                  </div>
+                </label>
+                <label style="cursor:pointer">
+                  <input type="radio" name="memeFont" value="helvetica" style="display:none" />
+                  <div class="font-pill" data-font="helvetica" onclick="selectFont(this)">
+                    <span style="font-weight:600">Helvetica</span>
+                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Clean & modern</span>
+                  </div>
+                </label>
+                <label style="cursor:pointer">
+                  <input type="radio" name="memeFont" value="georgia" style="display:none" />
+                  <div class="font-pill" data-font="georgia" onclick="selectFont(this)">
+                    <span style="font-style:italic;font-weight:700">Georgia</span>
+                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Editorial</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <button class="single-dl-btn" id="memeBtn" onclick="startMeme()">
+              <span class="spinner" id="memeSpinner"></span>
+              <span id="memeBtnLabel">🎬 Create Meme Reel</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Log card -->
+        <div class="log-card" id="memeLogCard">
+          <div class="log-titlebar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <span class="log-label">Meme render log</span>
+          </div>
+          <div class="log-body" id="memeLogBody"></div>
+        </div>
+
+        <!-- Download result -->
+        <div class="download-card video-result" id="memeDownloadCard" style="display:none">
+          <div class="download-inner">
+            <div class="download-left">
+              <div class="dl-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)">🎬</div>
+              <div class="dl-text">
+                <h3 style="color:var(--blue)">Your meme reel is ready!</h3>
+                <p>1080×1920 · white header · bold text · H.264</p>
+              </div>
+            </div>
+            <a href="/download/meme_mp4" class="download-btn" style="background:var(--blue);color:#000">⬇ Download meme_output.mp4</a>
+          </div>
+        </div>
+
+        <!-- Caption card (meme) -->
+        <div class="caption-card" id="memeCaptionCard">
+          <div class="caption-card-header">
+            <div class="caption-label">
+              <span class="caption-label-icon">✍️</span>
+              Original Caption
+            </div>
+            <button class="copy-btn" id="memeCopyBtn" onclick="copyMemeCaption()">
+              📋 Copy
+            </button>
+          </div>
+          <div class="caption-body" id="memeCaptionBody"></div>
+        </div>
+
+      </div>
+    </div><!-- /memePanel -->
+
   </div><!-- /page -->
 
   <script>
@@ -1695,16 +1849,17 @@
 
     /* ── App mode switcher ── */
     function switchAppMode(mode) {
-      const isSingle = mode === 'single';
-      document.getElementById('singlePanel').classList.toggle('hidden', !isSingle);
-      document.getElementById('stitchPanel').classList.toggle('hidden', isSingle);
-      document.getElementById('tabSingle').classList.toggle('active', isSingle);
-      document.getElementById('tabStitch').classList.toggle('active', !isSingle);
-      // Sync header icon to the active panel's mode
-      const isAudio = isSingle
-        ? getSingleMode() === 'audio'
-        : getMode() === 'audio';
-      document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
+      ['single','stitch','meme'].forEach(m => {
+        document.getElementById(m + 'Panel').classList.toggle('hidden', m !== mode);
+        document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
+      });
+      // Sync header icon
+      if (mode === 'meme') {
+        document.getElementById('logoIcon').textContent = '🎬';
+      } else {
+        const isAudio = mode === 'single' ? getSingleMode() === 'audio' : getMode() === 'audio';
+        document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
+      }
     }
 
     /* ── Single download ── */
@@ -1882,6 +2037,145 @@
         spin.style.display = 'none';
         onSingleModeChange();
       }
+    }
+
+    /* ── Meme Edit ── */
+    function updateMemePreview() {
+      const text = document.getElementById('memeText').value.trim();
+      const preview = document.getElementById('memePreview');
+      if (!text) { preview.textContent = 'Start typing to preview layout…'; return; }
+      // Match Python wrap_text logic (22 chars per line)
+      const words = text.split(' ');
+      let lines = [], cur = '';
+      for (const w of words) {
+        if (cur && cur.length + 1 + w.length > 22) { lines.push(cur); cur = w; }
+        else cur = cur ? cur + ' ' + w : w;
+      }
+      if (cur) lines.push(cur);
+      const headerH = 80 * 2 + lines.length * 100;
+      preview.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''} · ~${headerH}px header · ~${1920 - headerH}px video`;
+    }
+
+    function selectFont(el) {
+      document.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      const radio = el.closest('label').querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    }
+
+    function getMemeFont() {
+      const checked = document.querySelector('input[name="memeFont"]:checked');
+      return checked ? checked.value : 'impact';
+    }
+
+    function startMeme() {
+      const url       = document.getElementById('memeUrl').value.trim();
+      const memeText  = document.getElementById('memeText').value.trim();
+      const watermark = document.getElementById('memeWatermark').value.trim();
+      const font      = getMemeFont();
+
+      if (!url) {
+        const inp = document.getElementById('memeUrl');
+        inp.style.borderColor = 'rgba(248,113,113,0.5)';
+        inp.focus();
+        setTimeout(() => inp.style.borderColor = '', 1000);
+        return;
+      }
+      if (!memeText) {
+        const ta = document.getElementById('memeText');
+        ta.style.borderColor = 'rgba(248,113,113,0.5)';
+        ta.focus();
+        setTimeout(() => ta.style.borderColor = '', 1000);
+        return;
+      }
+
+      const btn  = document.getElementById('memeBtn');
+      const lbl  = document.getElementById('memeBtnLabel');
+      const spin = document.getElementById('memeSpinner');
+
+      let memeCaptionText = '';
+
+      btn.disabled = true;
+      spin.style.display = 'block';
+      lbl.textContent = 'Rendering…';
+      document.getElementById('memeLogCard').style.display = 'block';
+      document.getElementById('memeDownloadCard').style.display = 'none';
+      document.getElementById('memeCaptionCard').style.display = 'none';
+      document.getElementById('memeLogBody').innerHTML = '';
+      memeCaptionText = '';
+
+      fetch('/meme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font }),
+      }).then(res => {
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) { resetMeme(); return; }
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n'); buf = lines.pop();
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const msg = line.slice(6);
+              if (msg === 'DONE:meme_mp4') {
+                resetMeme();
+                document.getElementById('memeDownloadCard').style.display = 'block';
+                document.getElementById('memeDownloadCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                if (memeCaptionText) {
+                  document.getElementById('memeCaptionBody').textContent = memeCaptionText;
+                  const cc = document.getElementById('memeCaptionCard');
+                  cc.style.display = 'block';
+                  cc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              } else if (msg.startsWith('CAPTION:')) {
+                try {
+                  const bytes = Uint8Array.from(atob(msg.slice(8)), c => c.charCodeAt(0));
+                  memeCaptionText = new TextDecoder('utf-8').decode(bytes);
+                } catch(e) {}
+              } else {
+                const body = document.getElementById('memeLogBody');
+                const el = document.createElement('div');
+                el.className = 'log-line';
+                let cls = '';
+                if (/\[ERROR\]/.test(msg)) cls = 'err';
+                else if (/\[WARN\]/.test(msg)) cls = 'warn';
+                else if (/\[OK\]/.test(msg)) cls = 'ok';
+                else if (/^\[[\d/]+\]/.test(msg)) cls = 'head';
+                if (cls) el.classList.add(cls);
+                el.innerHTML = `<span class="ts">${ts()}</span><span class="msg">${msg}</span>`;
+                body.appendChild(el);
+                body.scrollTop = body.scrollHeight;
+              }
+            }
+            read();
+          });
+        }
+        read();
+      }).catch(err => {
+        const body = document.getElementById('memeLogBody');
+        body.insertAdjacentHTML('beforeend', `<div class="log-line err"><span class="ts">${ts()}</span><span class="msg">[ERROR] ${err}</span></div>`);
+        resetMeme();
+      });
+
+      function resetMeme() {
+        btn.disabled = false;
+        spin.style.display = 'none';
+        lbl.textContent = '🎬 Create Meme Reel';
+      }
+    }
+
+    function copyMemeCaption() {
+      const text = document.getElementById('memeCaptionBody').textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('memeCopyBtn');
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+      });
     }
   </script>
 </body>

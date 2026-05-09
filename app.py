@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
+from PIL import Image, ImageDraw, ImageFont
+from pilmoji import Pilmoji
 from flask import Flask, render_template, request, Response, send_file
 
 app = Flask(__name__)
@@ -18,7 +20,17 @@ SINGLE_AUDIO = os.path.join(BASE_DIR, "single_output.mp3")
 SINGLE_VIDEO = os.path.join(BASE_DIR, "single_output.mp4")
 TRANSCRIPT_AUDIO = os.path.join(BASE_DIR, "transcript_input.mp3")
 TRANSCRIPT_TEXT = os.path.join(BASE_DIR, "single_transcript.txt")
+MEME_OUTPUT = os.path.join(BASE_DIR, "meme_output.mp4")
 ENV_FILE = os.path.join(BASE_DIR, ".env")
+
+MEME_FONTS = {
+    "impact":    "/System/Library/Fonts/Supplemental/Impact.ttf",
+    "helvetica": "/System/Library/Fonts/Helvetica.ttc",
+    "georgia":   "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+}
+# Filter to only fonts that exist on this system
+MEME_FONTS = {k: v for k, v in MEME_FONTS.items() if os.path.exists(v)}
+MEME_FONT = MEME_FONTS.get("impact") or next(iter(MEME_FONTS.values()), None)
 
 
 def load_env_file():
@@ -133,6 +145,180 @@ def transcribe_audio_file(path):
     if not text:
         return "", "OpenAI returned an empty transcript."
     return text, ""
+
+
+def wrap_text(text, chars_per_line=22):
+    """Split text into lines of at most chars_per_line characters, breaking on spaces."""
+    words = text.split()
+    lines, current = [], ""
+    for word in words:
+        if current and len(current) + 1 + len(word) > chars_per_line:
+            lines.append(current)
+            current = word
+        else:
+            current = (current + " " + word).strip() if current else word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def meme_edit(url, meme_text, watermark="", font_key="impact"):
+    """Download a reel and apply meme format: white canvas header + bold text + video below."""
+    for dep in ("yt-dlp", "ffmpeg"):
+        if not check_dependency(dep):
+            yield sse(f"[ERROR] '{dep}' not found on PATH.")
+            return
+
+    chosen_font_path = MEME_FONTS.get(font_key) or MEME_FONT
+    if not chosen_font_path:
+        yield sse("[ERROR] No usable font found on this system for text rendering.")
+        return
+
+    url = url.strip()
+    meme_text = meme_text.strip()
+    if not url or not meme_text:
+        yield sse("[ERROR] URL and meme text are both required.")
+        return
+
+    raw_path  = os.path.join(BASE_DIR, "meme_raw.mp4")
+    conv_path = os.path.join(BASE_DIR, "meme_conv.mp4")
+    for p in (raw_path, conv_path, MEME_OUTPUT):
+        if os.path.exists(p):
+            os.remove(p)
+
+    # ── STEP 1: METADATA + CAPTION ───────────────────────────────────────────
+    yield sse("[1/4] Fetching post metadata...")
+    code, stdout, stderr = run_cmd(["yt-dlp", "--dump-json", "--no-download", url])
+    caption = ""
+    if code == 0 and stdout.strip():
+        try:
+            meta = json.loads(stdout.strip().splitlines()[-1])
+            caption = meta.get("description") or meta.get("title") or ""
+        except Exception:
+            caption = ""
+    if caption:
+        yield sse("[OK] Caption extracted.")
+        encoded = base64.b64encode(caption.encode("utf-8")).decode("ascii")
+        yield sse(f"CAPTION:{encoded}")
+    else:
+        yield sse("[WARN] Could not extract caption.")
+
+    # ── STEP 2: DOWNLOAD ─────────────────────────────────────────────────────
+    yield sse("[2/4] Downloading reel...")
+    code, _, stderr = run_cmd([
+        "yt-dlp",
+        "-f", "bestvideo+bestaudio/best",
+        "--merge-output-format", "mp4",
+        "-o", raw_path, url,
+    ])
+    if code != 0 or not os.path.exists(raw_path):
+        yield sse(f"[ERROR] Download failed. {stderr.strip()[-200:]}")
+        return
+    yield sse("[OK] Download complete.")
+
+    # ── STEP 3: CONVERT TO H.264 ──────────────────────────────────────────────
+    yield sse("[3/4] Converting to H.264...")
+    code, _, stderr = run_cmd([
+        "ffmpeg", "-y", "-i", raw_path,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+        "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart",
+        conv_path,
+    ])
+    if os.path.exists(raw_path):
+        os.remove(raw_path)
+    if code != 0 or not os.path.exists(conv_path):
+        yield sse(f"[ERROR] Conversion failed. {stderr.strip()[-200:]}")
+        return
+    yield sse("[OK] Conversion complete.")
+
+    # ── STEP 4: BUILD MEME LAYOUT ─────────────────────────────────────────────
+    yield sse("[4/4] Rendering meme layout...")
+
+    lines      = wrap_text(meme_text.upper() if font_key == "impact" else meme_text, chars_per_line=22)
+    font_size  = 72
+    line_h     = font_size + 28
+    bottom_gap = 28                               # small gap between text and video
+    top_pad    = 60                               # space above text block
+    header_h   = top_pad + len(lines) * line_h + bottom_gap
+    video_h    = 1920 - header_h
+    header_png = os.path.join(BASE_DIR, "meme_header.png")
+
+    # --- Draw header image (Pilmoji handles emoji rendering) ---
+    try:
+        img = Image.new("RGB", (1080, header_h), color=(255, 255, 255))
+
+        # Load chosen font
+        try:
+            pil_font = ImageFont.truetype(chosen_font_path, font_size)
+        except Exception:
+            pil_font = ImageFont.load_default()
+
+        # Anchor text block to bottom of header (close to video)
+        text_block_h = len(lines) * line_h
+        y_start = header_h - bottom_gap - text_block_h
+
+        with Pilmoji(img) as pilmoji_draw:
+            for idx, line in enumerate(lines):
+                bbox = pilmoji_draw.getsize(line, font=pil_font)
+                text_w = bbox[0]
+                x = (1080 - text_w) // 2
+                y = y_start + idx * line_h
+                pilmoji_draw.text((x, y), line, font=pil_font, fill=(0, 0, 0))
+
+        # Optional watermark (bottom-right, smaller, dark grey)
+        if watermark.strip():
+            draw = ImageDraw.Draw(img)
+            try:
+                wm_font = ImageFont.truetype(chosen_font_path, 32)
+            except Exception:
+                wm_font = ImageFont.load_default()
+            wm_text = watermark.strip()
+            wbbox = draw.textbbox((0, 0), wm_text, font=wm_font)
+            wx = 1080 - (wbbox[2] - wbbox[0]) - 20
+            wy = header_h - (wbbox[3] - wbbox[1]) - 10
+            draw.text((wx + 2, wy + 2), wm_text, font=wm_font, fill=(200, 200, 200))
+            draw.text((wx, wy), wm_text, font=wm_font, fill=(80, 80, 80))
+
+        img.save(header_png)
+    except Exception as e:
+        if os.path.exists(conv_path):
+            os.remove(conv_path)
+        yield sse(f"[ERROR] Header image generation failed. {e}")
+        return
+
+    # --- ffmpeg: stack header PNG + video ---
+    filt = (
+        f"[1:v]scale=1080:{video_h}:"
+        f"force_original_aspect_ratio=decrease,"
+        f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:white[vid];"
+        f"[0:v][vid]vstack[out]"
+    )
+
+    code, _, stderr = run_cmd([
+        "ffmpeg", "-y",
+        "-loop", "1", "-i", header_png,   # input 0: header image (looped)
+        "-i", conv_path,                   # input 1: video
+        "-filter_complex", filt,
+        "-map", "[out]",
+        "-map", "1:a",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart",
+        "-shortest",
+        MEME_OUTPUT,
+    ])
+
+    for p in (conv_path, header_png):
+        if os.path.exists(p):
+            os.remove(p)
+
+    if code != 0 or not os.path.exists(MEME_OUTPUT):
+        yield sse(f"[ERROR] Meme render failed. {stderr.strip()[-400:]}")
+        return
+
+    yield sse("[OK] Meme reel ready!")
+    yield sse("DONE:meme_mp4")
 
 
 def pipeline(urls, mode="audio"):
@@ -307,6 +493,8 @@ def download(filetype):
         path, name = SINGLE_VIDEO, "single_output.mp4"
     elif filetype == "transcript_txt":
         path, name = TRANSCRIPT_TEXT, "single_transcript.txt"
+    elif filetype == "meme_mp4":
+        path, name = MEME_OUTPUT, "meme_output.mp4"
     else:
         return "Invalid file type", 400
 
@@ -438,6 +626,21 @@ def single():
 
     def generate():
         yield from single_download(url, mode, transcribe)
+
+    return Response(generate(), mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.route("/meme", methods=["POST"])
+def meme():
+    data = request.get_json(force=True)
+    url        = data.get("url", "")
+    meme_text  = data.get("meme_text", "")
+    watermark  = data.get("watermark", "")
+    font_key   = data.get("font", "impact")
+
+    def generate():
+        yield from meme_edit(url, meme_text, watermark, font_key)
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
