@@ -71,6 +71,33 @@ def encode_text_event(prefix, text):
     return sse(f"{prefix}:{encoded}")
 
 
+def _read_and_delete_info_json(output_path, is_merge):
+    """Read description from yt-dlp's --write-info-json file, then delete it.
+
+    yt-dlp path rules (confirmed by testing):
+      merge output  (bestvideo+bestaudio): strips .mp4 ext  → meme_raw.info.json
+      audio extract (-x --audio-format mp3): appends suffix → single_output.mp3.info.json
+    We check both patterns as a fallback so a yt-dlp version change won't silently break it.
+    """
+    stem = os.path.splitext(output_path)[0]
+    candidate = (stem if is_merge else output_path) + ".info.json"
+    fallback   = (output_path if is_merge else stem) + ".info.json"
+    for p in (candidate, fallback):
+        if os.path.exists(p):
+            try:
+                with open(p, encoding="utf-8") as f:
+                    meta = json.load(f)
+                return meta.get("description") or meta.get("title") or ""
+            except Exception:
+                pass
+            finally:
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+    return ""
+
+
 def transcription_enabled():
     return bool(os.environ.get("OPENAI_API_KEY", "").strip())
 
@@ -186,14 +213,13 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         if os.path.exists(p):
             os.remove(p)
 
-    # ── STEP 1: DOWNLOAD + CAPTION (caption extracted via --print during download) ─
+    # ── STEP 1: DOWNLOAD + CAPTION ───────────────────────────────────────────
     yield sse("[1/3] Downloading reel...")
-    code, stdout, stderr = run_cmd([
+    code, _, stderr = run_cmd([
         "yt-dlp",
         "-f", "bestvideo+bestaudio/best",
         "--merge-output-format", "mp4",
-        "--print", "description",
-        "--no-simulate",
+        "--write-info-json",               # writes meme_raw.info.json (no extra API calls)
         "-o", raw_path, url,
     ])
     if code != 0 or not os.path.exists(raw_path):
@@ -201,8 +227,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         return
     yield sse("[OK] Download complete.")
 
-    # emit caption if we got one from --print
-    caption = stdout.strip() if stdout.strip() and stdout.strip() != "NA" else ""
+    caption = _read_and_delete_info_json(raw_path, is_merge=True)
     if caption:
         yield sse("[OK] Caption extracted.")
         encoded = base64.b64encode(caption.encode("utf-8")).decode("ascii")
@@ -517,7 +542,7 @@ def single_download(url, mode="audio", transcribe=False):
     # step counts: audio=[1 download, +1 if transcribe], video=[1 download, 1 convert, +1 if transcribe]
     total_steps = (2 if transcribe else 1) if is_audio else (3 if transcribe else 2)
 
-    # ── STEP 1: DOWNLOAD (caption piggybacked via --print description) ────────
+    # ── STEP 1: DOWNLOAD + CAPTION ───────────────────────────────────────────
     raw_output = os.path.join(BASE_DIR, "single_raw.mp4")
 
     if is_audio:
@@ -525,8 +550,7 @@ def single_download(url, mode="audio", transcribe=False):
         cmd = [
             "yt-dlp",
             "-x", "--audio-format", "mp3", "--audio-quality", "0",
-            "--print", "description",
-            "--no-simulate",
+            "--write-info-json",           # writes single_output.mp3.info.json
             "-o", output, url,
         ]
     else:
@@ -537,19 +561,20 @@ def single_download(url, mode="audio", transcribe=False):
             "yt-dlp",
             "-f", "bestvideo+bestaudio/best",
             "--merge-output-format", "mp4",
-            "--print", "description",
-            "--no-simulate",
+            "--write-info-json",           # writes single_raw.info.json
             "-o", raw_output, url,
         ]
 
-    code, stdout, stderr = run_cmd(cmd)
+    code, _, stderr = run_cmd(cmd)
     dl_path = output if is_audio else raw_output
     if code != 0 or not os.path.exists(dl_path):
         yield sse(f"[ERROR] Download failed. {stderr.strip()[-200:]}")
         return
 
-    # emit caption from --print output (stdout = description text)
-    caption = stdout.strip() if stdout.strip() and stdout.strip() != "NA" else ""
+    caption = _read_and_delete_info_json(
+        output if is_audio else raw_output,
+        is_merge=not is_audio,
+    )
     if caption:
         yield sse("[OK] Caption extracted.")
         yield encode_text_event("CAPTION", caption)
