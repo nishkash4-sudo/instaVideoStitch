@@ -186,29 +186,13 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         if os.path.exists(p):
             os.remove(p)
 
-    # ── STEP 1: METADATA + CAPTION ───────────────────────────────────────────
-    yield sse("[1/4] Fetching post metadata...")
-    code, stdout, stderr = run_cmd(["yt-dlp", "--dump-json", "--no-download", url])
-    caption = ""
-    if code == 0 and stdout.strip():
-        try:
-            meta = json.loads(stdout.strip().splitlines()[-1])
-            caption = meta.get("description") or meta.get("title") or ""
-        except Exception:
-            caption = ""
-    if caption:
-        yield sse("[OK] Caption extracted.")
-        encoded = base64.b64encode(caption.encode("utf-8")).decode("ascii")
-        yield sse(f"CAPTION:{encoded}")
-    else:
-        yield sse("[WARN] Could not extract caption.")
-
-    # ── STEP 2: DOWNLOAD ─────────────────────────────────────────────────────
-    yield sse("[2/4] Downloading reel...")
-    code, _, stderr = run_cmd([
+    # ── STEP 1: DOWNLOAD + CAPTION (caption extracted via --print during download) ─
+    yield sse("[1/3] Downloading reel...")
+    code, stdout, stderr = run_cmd([
         "yt-dlp",
         "-f", "bestvideo+bestaudio/best",
         "--merge-output-format", "mp4",
+        "--print", "description",          # prints description to stdout, no extra call
         "-o", raw_path, url,
     ])
     if code != 0 or not os.path.exists(raw_path):
@@ -216,8 +200,15 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         return
     yield sse("[OK] Download complete.")
 
+    # emit caption if we got one from --print
+    caption = stdout.strip() if stdout.strip() and stdout.strip() != "NA" else ""
+    if caption:
+        yield sse("[OK] Caption extracted.")
+        encoded = base64.b64encode(caption.encode("utf-8")).decode("ascii")
+        yield sse(f"CAPTION:{encoded}")
+
     # ── STEP 3: CONVERT TO H.264 ──────────────────────────────────────────────
-    yield sse("[3/4] Converting to H.264...")
+    yield sse("[2/3] Converting to H.264...")
     code, _, stderr = run_cmd([
         "ffmpeg", "-y", "-i", raw_path,
         "-c:v", "libx264", "-preset", "fast", "-crf", "18",
@@ -233,7 +224,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
     yield sse("[OK] Conversion complete.")
 
     # ── STEP 4: BUILD MEME LAYOUT ─────────────────────────────────────────────
-    yield sse("[4/4] Rendering meme layout...")
+    yield sse("[3/3] Rendering meme layout...")
 
     lines      = wrap_text(meme_text.upper() if font_key == "impact" else meme_text, chars_per_line=22)
     font_size  = 72
@@ -524,55 +515,48 @@ def single_download(url, mode="audio", transcribe=False):
         if os.path.exists(path):
             os.remove(path)
 
-    total_steps = 3 if is_audio and transcribe else 2
-    if not is_audio:
-        total_steps = 4 if transcribe else 3
+    # step counts: audio=[1 download, +1 if transcribe], video=[1 download, 1 convert, +1 if transcribe]
+    total_steps = (2 if transcribe else 1) if is_audio else (3 if transcribe else 2)
 
-    # ── STEP 1: EXTRACT METADATA (caption) ───────────────────────────────────
-    yield sse(f"[1/{total_steps}] Fetching post metadata...")
-    code, stdout, stderr = run_cmd(["yt-dlp", "--dump-json", "--no-download", url])
-    caption = ""
-    if code == 0 and stdout.strip():
-        try:
-            meta = json.loads(stdout.strip().splitlines()[-1])
-            caption = meta.get("description") or meta.get("title") or ""
-        except Exception:
-            caption = ""
-    if caption:
-        yield sse("[OK] Caption extracted.")
-        yield encode_text_event("CAPTION", caption)
-    else:
-        yield sse("[WARN] Could not extract caption.")
-
-    # ── STEP 2: DOWNLOAD ─────────────────────────────────────────────────────
+    # ── STEP 1: DOWNLOAD (caption piggybacked via --print description) ────────
     raw_output = os.path.join(BASE_DIR, "single_raw.mp4")
 
     if is_audio:
-        yield sse(f"[2/{total_steps}] Downloading reel at best audio quality...")
+        yield sse(f"[1/{total_steps}] Downloading reel at best audio quality...")
         cmd = [
             "yt-dlp",
             "-x", "--audio-format", "mp3", "--audio-quality", "0",
+            "--print", "description",
             "-o", output, url,
         ]
     else:
-        yield sse(f"[2/{total_steps}] Downloading reel at best available quality...")
+        yield sse(f"[1/{total_steps}] Downloading reel at best available quality...")
         if os.path.exists(raw_output):
             os.remove(raw_output)
         cmd = [
             "yt-dlp",
             "-f", "bestvideo+bestaudio/best",
             "--merge-output-format", "mp4",
+            "--print", "description",
             "-o", raw_output, url,
         ]
 
-    code, _, stderr = run_cmd(cmd)
+    code, stdout, stderr = run_cmd(cmd)
     dl_path = output if is_audio else raw_output
     if code != 0 or not os.path.exists(dl_path):
         yield sse(f"[ERROR] Download failed. {stderr.strip()[-200:]}")
         return
 
+    # emit caption from --print output (stdout = description text)
+    caption = stdout.strip() if stdout.strip() and stdout.strip() != "NA" else ""
+    if caption:
+        yield sse("[OK] Caption extracted.")
+        yield encode_text_event("CAPTION", caption)
+    else:
+        yield sse("[OK] Download complete.")
+
     if not is_audio:
-        yield sse(f"[3/{total_steps}] Converting to QuickTime-compatible H.264...")
+        yield sse(f"[2/{total_steps}] Converting to QuickTime-compatible H.264...")
         code, _, stderr = run_cmd([
             "ffmpeg", "-y", "-i", raw_output,
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
@@ -590,7 +574,7 @@ def single_download(url, mode="audio", transcribe=False):
         yield sse("[OK] Download complete!")
 
     if transcribe:
-        step = 3 if is_audio else 4
+        step = 2 if is_audio else 3
         yield sse(f"[{step}/{total_steps}] Preparing Hinglish-aware transcript audio...")
         code, _, stderr = run_cmd([
             "ffmpeg", "-y", "-i", output,
