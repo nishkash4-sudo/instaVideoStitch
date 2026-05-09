@@ -2,6 +2,12 @@ venv/
 __pycache__/
 *.pyc
 output.mp4
+single_output.mp3
+single_output.mp4
+single_raw.mp4
+single_transcript.txt
+transcript_input.mp3
+.env
 clip_*.mp4
 norm_*.mp4
 filelist.txt

@@ -731,6 +731,408 @@
     }
     .flash { animation: flashBorder 0.7s ease; }
 
+    /* ── App mode switcher ── */
+    .app-mode-switcher {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px;
+      gap: 4px;
+      margin-bottom: 32px;
+      width: fit-content;
+    }
+
+    .app-tab {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.22s;
+      border: 1.5px solid transparent;
+      background: none;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+    }
+
+    .app-tab:hover { color: var(--text); }
+
+    .app-tab.active {
+      background: linear-gradient(135deg, rgba(245,133,41,0.1), rgba(131,52,175,0.15));
+      border-color: rgba(131,52,175,0.3);
+      color: var(--text);
+      box-shadow: 0 0 0 1px rgba(131,52,175,0.1) inset,
+                  0 2px 12px rgba(131,52,175,0.1);
+    }
+
+    .app-tab .tab-icon { font-size: 16px; }
+
+    .app-tab-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-bright);
+      flex-shrink: 0;
+    }
+
+    /* ── Panel visibility ── */
+    .app-panel {
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .app-panel.hidden {
+      display: none;
+    }
+
+    /* ── Single download panel ── */
+    .single-layout {
+      max-width: 660px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .single-url-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .single-url-card-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .single-url-card-header .header-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--ig1), var(--ig2), var(--ig3));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .single-url-card-header h2 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .single-url-card-header p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .single-url-body {
+      padding: 22px 24px;
+    }
+
+    .single-input-wrap {
+      position: relative;
+      margin-bottom: 18px;
+    }
+
+    .single-input-wrap .ig-prefix {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 48px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      border-right: 1px solid var(--border);
+      pointer-events: none;
+      transition: border-color 0.2s;
+    }
+
+    .single-input-wrap:focus-within .ig-prefix {
+      border-color: rgba(131,52,175,0.4);
+    }
+
+    .single-url-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 0.88rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      padding: 14px 16px 14px 58px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .single-url-input:focus {
+      border-color: rgba(131,52,175,0.55);
+      background: #161630;
+      box-shadow: 0 0 0 4px rgba(131,52,175,0.08),
+                  0 0 20px rgba(131,52,175,0.06);
+    }
+
+    .single-url-input::placeholder { color: var(--text-dim); }
+
+    .single-mode-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .single-mode-pill {
+      position: relative;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .single-mode-pill input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+
+    .single-pill-tile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 13px;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .single-pill-tile:hover { border-color: rgba(167,139,250,0.3); }
+
+    .single-mode-pill input:checked ~ .single-pill-tile {
+      border-color: var(--ig3);
+      background: rgba(131,52,175,0.08);
+      box-shadow: 0 0 0 3px rgba(131,52,175,0.08);
+    }
+
+    .single-pill-check {
+      margin-left: auto;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--ig3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .single-mode-pill input:checked ~ .single-pill-tile .single-pill-check { opacity: 1; }
+
+    .pill-icon { font-size: 18px; }
+    .pill-info { display: flex; flex-direction: column; gap: 1px; }
+    .pill-name { font-size: 0.82rem; font-weight: 700; }
+    .pill-desc { font-size: 0.67rem; color: var(--text-muted); }
+
+    .transcribe-option {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(96,165,250,0.16);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(96,165,250,0.06), rgba(167,139,250,0.05));
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .transcribe-option:hover {
+      border-color: rgba(96,165,250,0.32);
+      background: linear-gradient(135deg, rgba(96,165,250,0.09), rgba(167,139,250,0.08));
+    }
+
+    .transcribe-option.disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .transcribe-option input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--blue);
+      flex-shrink: 0;
+    }
+
+    .transcribe-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .transcribe-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 750;
+      color: var(--text);
+    }
+
+    .transcribe-pill {
+      font-size: 0.58rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: var(--blue);
+      background: rgba(96,165,250,0.1);
+      border: 1px solid rgba(96,165,250,0.18);
+    }
+
+    .transcribe-desc {
+      font-size: 0.68rem;
+      line-height: 1.35;
+      color: var(--text-muted);
+    }
+
+    /* ── Single download button ── */
+    .single-dl-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 15px;
+      background: linear-gradient(135deg, var(--ig1) 0%, var(--ig2) 50%, var(--ig3) 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.97rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(221,42,123,0.25);
+      position: relative; overflow: hidden;
+      margin-top: 18px;
+    }
+
+    .single-dl-btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+      opacity: 0; transition: opacity 0.2s;
+    }
+
+    .single-dl-btn:hover::before { opacity: 1; }
+    .single-dl-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(221,42,123,0.35); }
+    .single-dl-btn:active { transform: none; }
+    .single-dl-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Caption card ── */
+    .caption-card {
+      background: var(--surface);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-left: 3px solid var(--ig3);
+      border-radius: 18px;
+      overflow: hidden;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      display: none;
+    }
+
+    .caption-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(131,52,175,0.05);
+      border-bottom: 1px solid rgba(167,139,250,0.1);
+    }
+
+    .caption-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--purple);
+    }
+
+    .caption-label-icon { font-size: 14px; }
+
+    .copy-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(167,139,250,0.08);
+      border: 1px solid rgba(167,139,250,0.2);
+      border-radius: 8px;
+      color: var(--purple);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 5px 11px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.4); }
+    .copy-btn.copied { color: var(--success); border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+
+    .caption-body {
+      padding: 16px 20px;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 0.83rem;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      scrollbar-width: thin;
+      scrollbar-color: #1e1e35 transparent;
+    }
+
+    .caption-body::-webkit-scrollbar { width: 4px; }
+    .caption-body::-webkit-scrollbar-thumb { background: #1e1e35; border-radius: 4px; }
+
+    .transcript-card {
+      border-color: rgba(96,165,250,0.22);
+      border-left-color: var(--blue);
+    }
+
+    .transcript-card .caption-card-header {
+      background: rgba(96,165,250,0.055);
+      border-bottom-color: rgba(96,165,250,0.12);
+    }
+
+    .transcript-card .caption-label {
+      color: var(--blue);
+    }
+
+    .transcript-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .txt-btn {
+      text-decoration: none;
+    }
+
+    /* ── Quality badge ── */
+    .quality-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+      background: rgba(250,204,21,0.1);
+      color: #facc15;
+      border: 1px solid rgba(250,204,21,0.2);
+    }
+
     /* ── Responsive ── */
     @media (max-width: 780px) {
       .workspace { grid-template-columns: 1fr; }
@@ -738,6 +1140,8 @@
       .header { flex-direction: column; gap: 12px; text-align: center; }
       .download-inner { flex-direction: column; text-align: center; }
       .download-left { flex-direction: column; }
+      .single-mode-row { flex-direction: column; }
+      .app-mode-switcher { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -764,6 +1168,163 @@
         Running locally on :8080
       </div>
     </div>
+
+    <!-- ── App mode switcher ── -->
+    <div class="app-mode-switcher">
+      <button class="app-tab active" id="tabSingle" onclick="switchAppMode('single')">
+        <span class="tab-icon">⬇</span> Single Download
+      </button>
+      <div class="app-tab-divider"></div>
+      <button class="app-tab" id="tabStitch" onclick="switchAppMode('stitch')">
+        <span class="tab-icon">✦</span> Multi Stitch
+      </button>
+    </div>
+
+    <!-- ════ SINGLE DOWNLOAD PANEL ════ -->
+    <div class="app-panel" id="singlePanel">
+      <div class="single-layout">
+
+        <!-- URL input card -->
+        <div class="single-url-card">
+          <div class="single-url-card-header">
+            <div class="header-icon">📥</div>
+            <div>
+              <h2>Single Reel Download</h2>
+              <p>Highest quality · no re-encoding · caption extracted</p>
+            </div>
+          </div>
+          <div class="single-url-body">
+            <div class="single-input-wrap">
+              <span class="ig-prefix">📎</span>
+              <input
+                type="url"
+                class="single-url-input"
+                id="singleUrl"
+                placeholder="https://www.instagram.com/reel/..."
+              />
+            </div>
+
+            <!-- Output format -->
+            <div class="single-mode-row">
+              <label class="single-mode-pill">
+                <input type="radio" name="singleMode" value="audio" checked onchange="onSingleModeChange()" />
+                <div class="single-pill-tile">
+                  <span class="pill-icon">🎵</span>
+                  <div class="pill-info">
+                    <span class="pill-name">Audio</span>
+                    <span class="pill-desc">Best quality MP3</span>
+                  </div>
+                  <span class="mode-badge badge-mp3">MP3</span>
+                  <span class="single-pill-check">✓</span>
+                </div>
+              </label>
+              <label class="single-mode-pill">
+                <input type="radio" name="singleMode" value="video" onchange="onSingleModeChange()" />
+                <div class="single-pill-tile">
+                  <span class="pill-icon">🎬</span>
+                  <div class="pill-info">
+                    <span class="pill-name">Video</span>
+                    <span class="pill-desc">Native resolution · no re-encode</span>
+                  </div>
+                  <span class="mode-badge badge-mp4">MP4</span>
+                  <span class="single-pill-check">✓</span>
+                </div>
+              </label>
+            </div>
+
+            <label class="transcribe-option{% if not transcription_enabled %} disabled{% endif %}" for="singleTranscribe">
+              <input
+                type="checkbox"
+                id="singleTranscribe"
+                onchange="onSingleModeChange()"
+                {% if not transcription_enabled %}disabled{% endif %}
+              />
+              <div class="transcribe-copy">
+                <div class="transcribe-title">
+                  Transcribe audio to text
+                  <span class="transcribe-pill">Hinglish-aware</span>
+                </div>
+                <div class="transcribe-desc">
+                  {% if transcription_enabled %}
+                  Preserves English + Roman Hindi naturally, without translating everything.
+                  {% else %}
+                  Add OPENAI_API_KEY to .env to enable this option.
+                  {% endif %}
+                </div>
+              </div>
+            </label>
+
+            <button class="single-dl-btn" id="singleBtn" onclick="startSingle()">
+              <span class="spinner" id="singleSpinner"></span>
+              <span id="singleBtnLabel">⬇ Download Audio</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Log card (single) -->
+        <div class="log-card" id="singleLogCard">
+          <div class="log-titlebar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <span class="log-label">Download log</span>
+          </div>
+          <div class="log-body" id="singleLogBody"></div>
+        </div>
+
+        <!-- Download result (single) -->
+        <div class="download-card" id="singleDownloadCard">
+          <div class="download-inner">
+            <div class="download-left">
+              <div class="dl-icon" id="singleDlIcon">🎧</div>
+              <div class="dl-text">
+                <h3 id="singleDlTitle">Your file is ready!</h3>
+                <p id="singleDlDesc">Highest quality, no re-encoding.</p>
+              </div>
+            </div>
+            <a href="#" class="download-btn" id="singleDlBtn">⬇ Download</a>
+          </div>
+        </div>
+
+        <!-- Caption card -->
+        <div class="caption-card" id="captionCard">
+          <div class="caption-card-header">
+            <div class="caption-label">
+              <span class="caption-label-icon">✍️</span>
+              Caption
+            </div>
+            <button class="copy-btn" id="copyBtn" onclick="copyCaption()">
+              📋 Copy
+            </button>
+          </div>
+          <div class="caption-body" id="captionBody"></div>
+        </div>
+
+        <!-- Transcript card -->
+        <div class="caption-card transcript-card" id="transcriptCard">
+          <div class="caption-card-header">
+            <div class="caption-label">
+              <span class="caption-label-icon">📝</span>
+              Transcript
+              <span class="transcribe-pill">Hinglish-aware</span>
+            </div>
+            <div class="transcript-actions">
+              <a href="/download/transcript_txt" class="copy-btn txt-btn" id="transcriptTxtBtn">
+                TXT
+              </a>
+              <button class="copy-btn" id="copyTranscriptBtn" onclick="copyTranscript()">
+                📋 Copy
+              </button>
+            </div>
+          </div>
+          <div class="caption-body" id="transcriptBody"></div>
+        </div>
+
+      </div>
+    </div><!-- /singlePanel -->
+
+    <!-- ════ STITCH PANEL ════ -->
+    <div class="app-panel hidden" id="stitchPanel">
 
     <!-- ── Two-column workspace ── -->
     <div class="workspace">
@@ -889,6 +1450,8 @@
       </div>
 
     </div>
+
+    </div><!-- /stitchPanel -->
 
   </div><!-- /page -->
 
@@ -1129,6 +1692,197 @@
 
     // Init default fields
     for (let i = 0; i < DEFAULT; i++) addField(false);
+
+    /* ── App mode switcher ── */
+    function switchAppMode(mode) {
+      const isSingle = mode === 'single';
+      document.getElementById('singlePanel').classList.toggle('hidden', !isSingle);
+      document.getElementById('stitchPanel').classList.toggle('hidden', isSingle);
+      document.getElementById('tabSingle').classList.toggle('active', isSingle);
+      document.getElementById('tabStitch').classList.toggle('active', !isSingle);
+      // Sync header icon to the active panel's mode
+      const isAudio = isSingle
+        ? getSingleMode() === 'audio'
+        : getMode() === 'audio';
+      document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
+    }
+
+    /* ── Single download ── */
+    function getSingleMode() {
+      return document.querySelector('input[name="singleMode"]:checked').value;
+    }
+
+    function wantsTranscript() {
+      const checkbox = document.getElementById('singleTranscribe');
+      return !!checkbox && checkbox.checked && !checkbox.disabled;
+    }
+
+    function onSingleModeChange() {
+      const isAudio = getSingleMode() === 'audio';
+      const withTranscript = wantsTranscript();
+      document.getElementById('singleBtnLabel').textContent = withTranscript
+        ? '⬇ Download + Transcribe'
+        : (isAudio ? '⬇ Download Audio' : '⬇ Download Video');
+      document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
+    }
+
+    function appendSingleLog(text) {
+      const body = document.getElementById('singleLogBody');
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      let cls = '';
+      if (/\[ERROR\]/.test(text)) cls = 'err';
+      else if (/\[WARN\]/.test(text))  cls = 'warn';
+      else if (/\[OK\]/.test(text))    cls = 'ok';
+      else if (/^\[[\d/]+\]/.test(text)) cls = 'head';
+      if (cls) line.classList.add(cls);
+      line.innerHTML = `<span class="ts">${ts()}</span><span class="msg">${text}</span>`;
+      body.appendChild(line);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function showSingleDownload(ext) {
+      const card = document.getElementById('singleDownloadCard');
+      const isAudio = ext === 'mp3';
+      card.className = `download-card ${isAudio ? 'audio-result' : 'video-result'}`;
+      document.getElementById('singleDlIcon').textContent  = isAudio ? '🎧' : '🎬';
+      document.getElementById('singleDlTitle').textContent = isAudio ? 'Your audio is ready!' : 'Your video is ready!';
+      document.getElementById('singleDlDesc').textContent  = isAudio
+        ? 'Highest quality MP3 · no re-encoding.'
+        : 'Native resolution MP4 · no re-encoding.';
+      const btn = document.getElementById('singleDlBtn');
+      btn.textContent = `⬇ Download ${isAudio ? 'output.mp3' : 'output.mp4'}`;
+      btn.href = `/download/single_${ext}`;
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    let captionText = '';
+    let transcriptText = '';
+
+    function showCaption(text) {
+      captionText = text;
+      const card = document.getElementById('captionCard');
+      document.getElementById('captionBody').textContent = text;
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyCaption() {
+      if (!captionText) return;
+      navigator.clipboard.writeText(captionText).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function showTranscript(text) {
+      transcriptText = text;
+      const card = document.getElementById('transcriptCard');
+      document.getElementById('transcriptBody').textContent = text;
+      document.getElementById('transcriptTxtBtn').href = `/download/transcript_txt?t=${Date.now()}`;
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyTranscript() {
+      if (!transcriptText) return;
+      navigator.clipboard.writeText(transcriptText).then(() => {
+        const btn = document.getElementById('copyTranscriptBtn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    function startSingle() {
+      const url = document.getElementById('singleUrl').value.trim();
+      if (!url) {
+        const inp = document.getElementById('singleUrl');
+        inp.style.borderColor = 'rgba(248,113,113,0.5)';
+        inp.focus();
+        setTimeout(() => inp.style.borderColor = '', 1000);
+        return;
+      }
+
+      const mode = getSingleMode();
+      const transcribe = wantsTranscript();
+      const btn  = document.getElementById('singleBtn');
+      const lbl  = document.getElementById('singleBtnLabel');
+      const spin = document.getElementById('singleSpinner');
+
+      btn.disabled = true;
+      spin.style.display = 'block';
+      lbl.textContent = 'Processing…';
+      document.getElementById('singleLogCard').style.display = 'block';
+      document.getElementById('singleDownloadCard').style.display = 'none';
+      document.getElementById('captionCard').style.display = 'none';
+      document.getElementById('transcriptCard').style.display = 'none';
+      document.getElementById('singleLogBody').innerHTML = '';
+      captionText = '';
+      transcriptText = '';
+
+      fetch('/single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, mode, transcribe }),
+      }).then(res => {
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        let pendingCaption = '';
+        let pendingTranscript = '';
+
+        function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) { resetSingle(); return; }
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n'); buf = lines.pop();
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const msg = line.slice(6);
+              if (msg.startsWith('DONE:')) {
+                resetSingle();
+                showSingleDownload(msg.split(':')[1]);
+                if (pendingCaption) showCaption(pendingCaption);
+                if (pendingTranscript) showTranscript(pendingTranscript);
+              } else if (msg.startsWith('CAPTION:')) {
+                try {
+                  const bytes = Uint8Array.from(atob(msg.slice(8)), c => c.charCodeAt(0));
+                  pendingCaption = new TextDecoder('utf-8').decode(bytes);
+                } catch(e) {}
+              } else if (msg.startsWith('TRANSCRIPT:')) {
+                try {
+                  const bytes = Uint8Array.from(atob(msg.slice(11)), c => c.charCodeAt(0));
+                  pendingTranscript = new TextDecoder('utf-8').decode(bytes);
+                } catch(e) {}
+              } else {
+                appendSingleLog(msg);
+              }
+            }
+            read();
+          });
+        }
+        read();
+      }).catch(err => {
+        appendSingleLog(`[ERROR] ${err}`);
+        resetSingle();
+      });
+
+      function resetSingle() {
+        btn.disabled = false;
+        spin.style.display = 'none';
+        onSingleModeChange();
+      }
+    }
   </script>
 </body>
 </html>
