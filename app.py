@@ -190,7 +190,6 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
     yield sse("[1/3] Downloading reel...")
     code, stdout, stderr = run_cmd([
         "yt-dlp",
-        "--cookies-from-browser", "chrome",
         "-f", "bestvideo+bestaudio/best",
         "--merge-output-format", "mp4",
         "--print", "description",
@@ -351,14 +350,12 @@ def pipeline(urls, mode="audio"):
         if is_audio:
             cmd = [
                 "yt-dlp",
-                "--cookies-from-browser", "chrome",
                 "-x", "--audio-format", "mp3", "--audio-quality", "0",
                 "-o", out_path, url,
             ]
         else:
             cmd = [
                 "yt-dlp",
-                "--cookies-from-browser", "chrome",
                 "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
                 "--merge-output-format", "mp4",
                 "-o", out_path, url,
@@ -527,7 +524,6 @@ def single_download(url, mode="audio", transcribe=False):
         yield sse(f"[1/{total_steps}] Downloading reel at best audio quality...")
         cmd = [
             "yt-dlp",
-            "--cookies-from-browser", "chrome",
             "-x", "--audio-format", "mp3", "--audio-quality", "0",
             "--print", "description",
             "--no-simulate",
@@ -539,7 +535,6 @@ def single_download(url, mode="audio", transcribe=False):
             os.remove(raw_output)
         cmd = [
             "yt-dlp",
-            "--cookies-from-browser", "chrome",
             "-f", "bestvideo+bestaudio/best",
             "--merge-output-format", "mp4",
             "--print", "description",
