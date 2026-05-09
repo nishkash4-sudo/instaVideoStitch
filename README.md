@@ -45,16 +45,17 @@ A local web app that downloads Instagram Reels and turns them into polished audi
 Instagram Reel URL
         │
         ▼
-┌───────────────────┐
-│  yt-dlp           │  --dump-json → extract post caption
-│  (metadata fetch) │
-└───────────────────┘
-        │
-        ▼
-┌───────────────────┐
-│  yt-dlp           │  Audio: -x --audio-format mp3 --audio-quality 0
-│  (download)       │  Video: -f bestvideo+bestaudio --merge-output-format mp4
-└───────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  yt-dlp (download + --write-info-json)              │
+│                                                     │
+│  Audio: -x --audio-format mp3 --audio-quality 0    │
+│  Video: -f bestvideo+bestaudio --merge-output-format mp4│
+│                                                     │
+│  --write-info-json writes metadata yt-dlp already  │
+│  fetched (zero extra API calls) → single_output.   │
+│  {mp3|mp4}.info.json / single_raw.info.json        │
+│  Caption (description field) read from that file.  │
+└─────────────────────────────────────────────────────┘
         │
         ▼  (video only)
 ┌───────────────────┐
@@ -119,16 +120,16 @@ Up to 30 Instagram Reel URLs
 Instagram Reel URL + Meme Caption Text
         │
         ▼
-┌───────────────────┐
-│  yt-dlp           │  --dump-json → extract original post caption
-│  (metadata fetch) │  streamed to UI via SSE CAPTION: event
-└───────────────────┘
-        │
-        ▼
-┌───────────────────┐
-│  yt-dlp           │  -f bestvideo+bestaudio  →  raw video download
-│  (download)       │
-└───────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  yt-dlp (download + --write-info-json)              │
+│                                                     │
+│  -f bestvideo+bestaudio --merge-output-format mp4  │
+│                                                     │
+│  --write-info-json writes metadata yt-dlp already  │
+│  fetched (zero extra API calls) → meme_raw.info.json│
+│  Original post caption read from that file and     │
+│  streamed to UI via SSE CAPTION: event.            │
+└─────────────────────────────────────────────────────┘
         │
         ▼
 ┌───────────────────┐
