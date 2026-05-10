@@ -324,12 +324,22 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0):
         return
 
     # --- ffmpeg: stack header PNG + video ---
-    filt = (
-        f"[1:v]scale=1080:{video_h}:"
-        f"force_original_aspect_ratio=decrease,"
-        f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:white[vid];"
-        f"[0:v][vid]vstack[out]"
-    )
+    # When the user cropped the source video, the remaining clip is shorter than
+    # video_h. Using force_original_aspect_ratio=decrease + pad would center it
+    # with white bars. Instead, scale directly to fill video_h (slight vertical
+    # stretch is acceptable; eliminates the white gap).
+    if crop_top > 0:
+        filt = (
+            f"[1:v]scale=1080:{video_h}[vid];"
+            f"[0:v][vid]vstack[out]"
+        )
+    else:
+        filt = (
+            f"[1:v]scale=1080:{video_h}:"
+            f"force_original_aspect_ratio=decrease,"
+            f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:white[vid];"
+            f"[0:v][vid]vstack[out]"
+        )
 
     code, _, stderr = run_cmd([
         "ffmpeg", "-y",

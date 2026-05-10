@@ -2392,13 +2392,16 @@
         return;
       }
 
-      // Map video pixels → display pixels
-      // object-fit:cover + object-position:top on portrait image:
-      // scale = containerW / 1080  →  displayed height in video px = containerH / scale = containerH * 1080 / containerW
+      // Map video pixels → display pixels.
+      // object-fit:cover on a portrait image (1080×1920) in a landscape container:
+      // the WIDTH is always the binding constraint — the image scales so its 1080px
+      // fills containerW. Scale factor = containerW/1080.
+      // Therefore: displayY = videoY × (containerW/1080)
+      //        ↔  videoY   = displayY × (1080/containerW)
+      // containerH and ASSUMED_VIDEO_H are irrelevant here.
       const containerW = wrap.offsetWidth;
       const containerH = wrap.offsetHeight;
-      const videoPxPerDisplayPx = ASSUMED_VIDEO_H * containerW / (1080 * containerH);
-      const displayY = Math.min(Math.round(cropPx / videoPxPerDisplayPx), containerH);
+      const displayY = Math.min(Math.round(cropPx * containerW / 1080), containerH);
 
       shade.style.height = displayY + 'px';
       line.style.display = 'block';
@@ -2415,8 +2418,8 @@
         return Math.max(0, Math.min(clientY - rect.top, rect.height));
       }
       function yToPx(y, rect) {
-        const videoPxPerDisplayPx = ASSUMED_VIDEO_H * rect.width / (1080 * rect.height);
-        return Math.round(y * videoPxPerDisplayPx);
+        // Inverse of updateCropLine: displayY × (1080/containerW) = videoY
+        return Math.round(y * 1080 / rect.width);
       }
 
       wrap.addEventListener('mousedown',  e => { dragging = true; e.preventDefault(); });
