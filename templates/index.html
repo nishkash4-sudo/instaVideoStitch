@@ -1226,10 +1226,13 @@
     #cropTagBottom { top:4px;    right:8px; }
     #cropTagLeft   { top:6px;    left:4px;  }
     #cropTagRight  { top:6px;    right:4px; }
-    /* Draggable handle lines */
-    .crop-h { position:absolute; background:#f87171; z-index:2; display:none; }
-    #cropHandleTop, #cropHandleBottom { left:0; right:0; height:3px; cursor:ns-resize; }
-    #cropHandleLeft, #cropHandleRight { top:0; bottom:0; width:3px; cursor:ew-resize; }
+    /* Draggable handle lines — always visible at their edge */
+    .crop-h { position:absolute; background:#f87171; z-index:2; opacity:0.55; }
+    .crop-h:hover { opacity:1; }
+    #cropHandleTop    { left:0; right:0; height:3px; cursor:ns-resize; top:0; }
+    #cropHandleBottom { left:0; right:0; height:3px; cursor:ns-resize; bottom:0; }
+    #cropHandleLeft   { top:0; bottom:0; width:3px;  cursor:ew-resize; left:0; }
+    #cropHandleRight  { top:0; bottom:0; width:3px;  cursor:ew-resize; right:0; }
     /* Controls */
     .crop-controls {
       padding: 12px 16px;
@@ -2494,8 +2497,9 @@
         shade.style.height = d + 'px';
         tag.style.display  = px > 0 ? 'inline' : 'none';
         tag.textContent    = px + 'px';
-        handle.style.display = px > 0 ? 'block' : 'none';
-        if (px > 0) { if (fromBottom) handle.style.bottom = d + 'px'; else handle.style.top = d + 'px'; }
+        // Handle always visible — just move it to current crop position
+        if (fromBottom) handle.style.bottom = d + 'px';
+        else            handle.style.top    = d + 'px';
       }
 
       function applyEdgeV(shadeId, handleId, tagId, px, fromRight) {
@@ -2506,8 +2510,9 @@
         shade.style.width  = d + 'px';
         tag.style.display  = px > 0 ? 'inline' : 'none';
         tag.textContent    = px + 'px';
-        handle.style.display = px > 0 ? 'block' : 'none';
-        if (px > 0) { if (fromRight) handle.style.right = d + 'px'; else handle.style.left = d + 'px'; }
+        // Handle always visible — just move it to current crop position
+        if (fromRight) handle.style.right = d + 'px';
+        else           handle.style.left  = d + 'px';
       }
 
       applyEdgeH('cropShadeTop',    'cropHandleTop',    'cropTagTop',    cropTop,    false);
