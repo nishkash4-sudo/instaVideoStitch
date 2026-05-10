@@ -1180,7 +1180,7 @@
       margin: 0 auto;
       overflow: hidden;
       background: var(--surface2);
-      cursor: ns-resize;
+      cursor: default;
       user-select: none;
     }
     .crop-placeholder {
@@ -1199,80 +1199,84 @@
       object-position: top center;
       display: none;
     }
+    /* Shade overlays — one per side */
     .crop-shade {
       position: absolute;
-      top: 0; left: 0; right: 0;
       background: rgba(248,113,113,0.28);
       pointer-events: none;
-      height: 0;
+      z-index: 1;
     }
-    .crop-handle-line {
+    #cropShadeTop    { top:0; left:0; right:0; height:0; }
+    #cropShadeBottom { bottom:0; left:0; right:0; height:0; }
+    #cropShadeLeft   { top:0; left:0; bottom:0; width:0; }
+    #cropShadeRight  { top:0; right:0; bottom:0; width:0; }
+    /* Pixel labels inside shades */
+    .crop-shade-tag {
       position: absolute;
-      left: 0; right: 0;
-      height: 2px;
-      background: #f87171;
-      top: 0;
-    }
-    .crop-handle-tag {
-      position: absolute;
-      right: 10px;
-      top: -11px;
       background: #f87171;
       color: #fff;
-      font-size: 0.68rem;
+      font-size: 0.63rem;
       font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 5px;
+      padding: 2px 6px;
+      border-radius: 4px;
       white-space: nowrap;
+      display: none;
     }
+    #cropTagTop    { bottom:4px; right:8px; }
+    #cropTagBottom { top:4px;    right:8px; }
+    #cropTagLeft   { top:6px;    left:4px;  }
+    #cropTagRight  { top:6px;    right:4px; }
+    /* Draggable handle lines */
+    .crop-h { position:absolute; background:#f87171; z-index:2; display:none; }
+    #cropHandleTop, #cropHandleBottom { left:0; right:0; height:3px; cursor:ns-resize; }
+    #cropHandleLeft, #cropHandleRight { top:0; bottom:0; width:3px; cursor:ew-resize; }
+    /* Controls */
     .crop-controls {
       padding: 12px 16px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       flex-wrap: wrap;
     }
-    .crop-presets { display: flex; gap: 6px; }
-    .crop-preset-btn {
-      padding: 4px 11px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text-muted);
-      font-size: 0.73rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: inherit;
+    .crop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 14px;
+      flex: 1;
     }
-    .crop-preset-btn:hover { border-color: rgba(248,113,113,0.4); color: var(--text); }
-    .crop-preset-btn.active {
-      border-color: #f87171;
-      background: rgba(248,113,113,0.1);
-      color: var(--text);
-    }
-    .crop-px-input {
+    .crop-side-label {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-left: auto;
-      font-size: 0.78rem;
+      gap: 5px;
+      font-size: 0.75rem;
       color: var(--text-muted);
     }
-    .crop-px-input input {
-      width: 62px;
+    .crop-side-label input {
+      width: 56px;
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
-      font-size: 0.78rem;
-      padding: 4px 8px;
+      font-size: 0.76rem;
+      padding: 3px 7px;
       text-align: right;
       font-family: inherit;
       outline: none;
     }
-    .crop-px-input input:focus {
-      border-color: rgba(248,113,113,0.45);
+    .crop-side-label input:focus { border-color: rgba(248,113,113,0.45); }
+    .crop-reset-all {
+      padding: 5px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
     }
+    .crop-reset-all:hover { border-color: rgba(248,113,113,0.4); color: var(--text); }
 
     /* ── Responsive ── */
     @media (max-width: 780px) {
@@ -1626,7 +1630,7 @@
               />
             </div>
 
-            <!-- Crop-top preview card -->
+            <!-- Crop preview card (all 4 sides) -->
             <div class="crop-card" id="memeCropCard">
               <div class="crop-preview-wrap" id="cropWrap">
                 <div class="crop-placeholder" id="cropPlaceholder">
@@ -1634,24 +1638,37 @@
                   <span>Paste URL above to preview source video</span>
                 </div>
                 <img class="crop-thumb" id="cropThumb" alt="Video preview" />
-                <div class="crop-shade" id="cropShade"></div>
-                <div class="crop-handle-line" id="cropHandleLine" style="display:none">
-                  <div class="crop-handle-tag" id="cropHandleTag">Crop: 0px</div>
-                </div>
+                <!-- Shade overlays -->
+                <div class="crop-shade" id="cropShadeTop">   <span class="crop-shade-tag" id="cropTagTop"></span></div>
+                <div class="crop-shade" id="cropShadeBottom"><span class="crop-shade-tag" id="cropTagBottom"></span></div>
+                <div class="crop-shade" id="cropShadeLeft">  <span class="crop-shade-tag" id="cropTagLeft"></span></div>
+                <div class="crop-shade" id="cropShadeRight"> <span class="crop-shade-tag" id="cropTagRight"></span></div>
+                <!-- Draggable handles -->
+                <div class="crop-h" id="cropHandleTop"    data-side="top"></div>
+                <div class="crop-h" id="cropHandleBottom" data-side="bottom"></div>
+                <div class="crop-h" id="cropHandleLeft"   data-side="left"></div>
+                <div class="crop-h" id="cropHandleRight"  data-side="right"></div>
               </div>
               <div class="crop-controls">
-                <div class="crop-presets">
-                  <button class="crop-preset-btn active" data-crop="0"   onclick="setCropPx(0)">None</button>
-                  <button class="crop-preset-btn"        data-crop="200" onclick="setCropPx(200)">200px</button>
-                  <button class="crop-preset-btn"        data-crop="350" onclick="setCropPx(350)">350px</button>
-                  <button class="crop-preset-btn"        data-crop="500" onclick="setCropPx(500)">500px</button>
+                <div class="crop-grid">
+                  <label class="crop-side-label">↑ Top
+                    <input type="number" id="cropTopInput" value="0" min="0" max="900" step="10"
+                           oninput="onCropSideInput('top',this.value)" />px
+                  </label>
+                  <label class="crop-side-label">↓ Bottom
+                    <input type="number" id="cropBottomInput" value="0" min="0" max="900" step="10"
+                           oninput="onCropSideInput('bottom',this.value)" />px
+                  </label>
+                  <label class="crop-side-label">← Left
+                    <input type="number" id="cropLeftInput" value="0" min="0" max="540" step="10"
+                           oninput="onCropSideInput('left',this.value)" />px
+                  </label>
+                  <label class="crop-side-label">→ Right
+                    <input type="number" id="cropRightInput" value="0" min="0" max="540" step="10"
+                           oninput="onCropSideInput('right',this.value)" />px
+                  </label>
                 </div>
-                <div class="crop-px-input">
-                  <span>Crop top</span>
-                  <input type="number" id="cropPxInput" value="0" min="0" max="900" step="10"
-                         oninput="onCropInput(this.value)" />
-                  <span>px</span>
-                </div>
+                <button class="crop-reset-all" onclick="resetAllCrop()">Reset All</button>
               </div>
             </div>
 
@@ -2307,7 +2324,7 @@
       fetch('/meme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropPx, top_pad: getMemeTopPad() }),
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropTop, crop_bottom: cropBottom, crop_left: cropLeft, crop_right: cropRight, top_pad: getMemeTopPad() }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
@@ -2390,9 +2407,9 @@
       });
     }
 
-    // ── Meme crop preview ──────────────────────────────────────────────────────
-    const ASSUMED_VIDEO_H = 1920;   // Instagram portrait standard
-    let cropPx = 0;
+    // ── Meme crop preview (all 4 sides) ───────────────────────────────────────
+    let cropTop = 0, cropBottom = 0, cropLeft = 0, cropRight = 0;
+    let draggingSide = null;
     let thumbFetchController = null;
 
     function fetchThumb(url) {
@@ -2419,7 +2436,7 @@
         thumb.src = URL.createObjectURL(blob);
         thumb.style.display = 'block';
         ph.style.display = 'none';
-        updateCropLine();
+        updateCropOverlay();
       })
       .catch(e => {
         if (e.name === 'AbortError') return;
@@ -2427,7 +2444,6 @@
       });
     }
 
-    // Called from URL input's oninput (debounced)
     let thumbDebounce = null;
     function onMemeUrlInput() {
       const url = document.getElementById('memeUrl').value.trim();
@@ -2436,82 +2452,96 @@
       thumbDebounce = setTimeout(() => fetchThumb(url), 800);
     }
 
-    function setCropPx(px) {
-      cropPx = Math.max(0, Math.min(px, 900));
-      document.getElementById('cropPxInput').value = cropPx;
-      document.querySelectorAll('.crop-preset-btn').forEach(btn => {
-        btn.classList.toggle('active', parseInt(btn.dataset.crop) === cropPx);
-      });
-      updateCropLine();
+    function setCrop(side, px) {
+      const max = (side === 'left' || side === 'right') ? 540 : 900;
+      px = Math.max(0, Math.min(Math.round(px), max));
+      if (side === 'top')    { cropTop    = px; document.getElementById('cropTopInput').value    = px; }
+      if (side === 'bottom') { cropBottom = px; document.getElementById('cropBottomInput').value = px; }
+      if (side === 'left')   { cropLeft   = px; document.getElementById('cropLeftInput').value   = px; }
+      if (side === 'right')  { cropRight  = px; document.getElementById('cropRightInput').value  = px; }
+      updateCropOverlay();
     }
 
-    function onCropInput(val) {
-      const px = Math.max(0, Math.min(parseInt(val) || 0, 900));
-      cropPx = px;
-      document.querySelectorAll('.crop-preset-btn').forEach(btn => {
-        btn.classList.toggle('active', parseInt(btn.dataset.crop) === cropPx);
-      });
-      updateCropLine();
+    function onCropSideInput(side, val) {
+      const max = (side === 'left' || side === 'right') ? 540 : 900;
+      const px = Math.max(0, Math.min(parseInt(val) || 0, max));
+      if (side === 'top')    cropTop    = px;
+      if (side === 'bottom') cropBottom = px;
+      if (side === 'left')   cropLeft   = px;
+      if (side === 'right')  cropRight  = px;
+      updateCropOverlay();
     }
 
-    function updateCropLine() {
-      const wrap  = document.getElementById('cropWrap');
-      const shade = document.getElementById('cropShade');
-      const line  = document.getElementById('cropHandleLine');
-      const tag   = document.getElementById('cropHandleTag');
+    function resetAllCrop() {
+      cropTop = cropBottom = cropLeft = cropRight = 0;
+      ['cropTopInput','cropBottomInput','cropLeftInput','cropRightInput'].forEach(id => {
+        document.getElementById(id).value = 0;
+      });
+      updateCropOverlay();
+    }
 
-      if (cropPx === 0) {
-        shade.style.height = '0';
-        line.style.display = 'none';
-        return;
+    function updateCropOverlay() {
+      const wrap = document.getElementById('cropWrap');
+      const cW = wrap.offsetWidth, cH = wrap.offsetHeight;
+      // 9:16 container + 9:16 image → fills exactly → sX = cW/1080, sY = cH/1920
+      const sX = cW / 1080, sY = cH / 1920;
+
+      function applyEdgeH(shadeId, handleId, tagId, px, fromBottom) {
+        const shade  = document.getElementById(shadeId);
+        const handle = document.getElementById(handleId);
+        const tag    = document.getElementById(tagId);
+        const d = Math.min(Math.round(px * sY), cH);
+        shade.style.height = d + 'px';
+        tag.style.display  = px > 0 ? 'inline' : 'none';
+        tag.textContent    = px + 'px';
+        handle.style.display = px > 0 ? 'block' : 'none';
+        if (px > 0) { if (fromBottom) handle.style.bottom = d + 'px'; else handle.style.top = d + 'px'; }
       }
 
-      // Map video pixels → display pixels.
-      // object-fit:cover on a portrait image (1080×1920) in a landscape container:
-      // the WIDTH is always the binding constraint — the image scales so its 1080px
-      // fills containerW. Scale factor = containerW/1080.
-      // Therefore: displayY = videoY × (containerW/1080)
-      //        ↔  videoY   = displayY × (1080/containerW)
-      // containerH and ASSUMED_VIDEO_H are irrelevant here.
-      const containerW = wrap.offsetWidth;
-      const containerH = wrap.offsetHeight;
-      const displayY = Math.min(Math.round(cropPx * containerW / 1080), containerH);
+      function applyEdgeV(shadeId, handleId, tagId, px, fromRight) {
+        const shade  = document.getElementById(shadeId);
+        const handle = document.getElementById(handleId);
+        const tag    = document.getElementById(tagId);
+        const d = Math.min(Math.round(px * sX), cW);
+        shade.style.width  = d + 'px';
+        tag.style.display  = px > 0 ? 'inline' : 'none';
+        tag.textContent    = px + 'px';
+        handle.style.display = px > 0 ? 'block' : 'none';
+        if (px > 0) { if (fromRight) handle.style.right = d + 'px'; else handle.style.left = d + 'px'; }
+      }
 
-      shade.style.height = displayY + 'px';
-      line.style.display = 'block';
-      line.style.top     = displayY + 'px';
-      tag.textContent    = `Crop: ${cropPx}px`;
+      applyEdgeH('cropShadeTop',    'cropHandleTop',    'cropTagTop',    cropTop,    false);
+      applyEdgeH('cropShadeBottom', 'cropHandleBottom', 'cropTagBottom', cropBottom, true);
+      applyEdgeV('cropShadeLeft',   'cropHandleLeft',   'cropTagLeft',   cropLeft,   false);
+      applyEdgeV('cropShadeRight',  'cropHandleRight',  'cropTagRight',  cropRight,  true);
+    }
+
+    function toPx(side, clientX, clientY, rect) {
+      if (side === 'top')    return Math.round(Math.max(0, Math.min(clientY - rect.top,    rect.height)) * 1920 / rect.height);
+      if (side === 'bottom') return Math.round(Math.max(0, Math.min(rect.bottom - clientY, rect.height)) * 1920 / rect.height);
+      if (side === 'left')   return Math.round(Math.max(0, Math.min(clientX - rect.left,   rect.width))  * 1080 / rect.width);
+      if (side === 'right')  return Math.round(Math.max(0, Math.min(rect.right - clientX,  rect.width))  * 1080 / rect.width);
     }
 
     function initCropDrag() {
-      const wrap = document.getElementById('cropWrap');
-      let dragging = false;
-
-      function getY(e, rect) {
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return Math.max(0, Math.min(clientY - rect.top, rect.height));
-      }
-      function yToPx(y, rect) {
-        // Inverse of updateCropLine: displayY × (1080/containerW) = videoY
-        return Math.round(y * 1080 / rect.width);
-      }
-
-      wrap.addEventListener('mousedown',  e => { dragging = true; e.preventDefault(); });
-      wrap.addEventListener('touchstart', e => { dragging = true; }, { passive: true });
-
+      ['top','bottom','left','right'].forEach(side => {
+        const h = document.getElementById('cropHandle' + side[0].toUpperCase() + side.slice(1));
+        h.addEventListener('mousedown',  e => { draggingSide = side; e.preventDefault(); });
+        h.addEventListener('touchstart', () => { draggingSide = side; }, { passive: true });
+      });
       document.addEventListener('mousemove', e => {
-        if (!dragging) return;
-        const rect = wrap.getBoundingClientRect();
-        setCropPx(yToPx(getY(e, rect), rect));
+        if (!draggingSide) return;
+        const rect = document.getElementById('cropWrap').getBoundingClientRect();
+        setCrop(draggingSide, toPx(draggingSide, e.clientX, e.clientY, rect));
       });
       document.addEventListener('touchmove', e => {
-        if (!dragging) return;
-        const rect = wrap.getBoundingClientRect();
-        setCropPx(yToPx(getY(e, rect), rect));
+        if (!draggingSide) return;
+        const rect = document.getElementById('cropWrap').getBoundingClientRect();
+        const t = e.touches[0];
+        setCrop(draggingSide, toPx(draggingSide, t.clientX, t.clientY, rect));
       }, { passive: true });
-
-      document.addEventListener('mouseup',  () => { dragging = false; });
-      document.addEventListener('touchend', () => { dragging = false; });
+      document.addEventListener('mouseup',  () => { draggingSide = null; });
+      document.addEventListener('touchend', () => { draggingSide = null; });
     }
 
     initCropDrag();

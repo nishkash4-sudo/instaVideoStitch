@@ -192,7 +192,7 @@ def wrap_text(text, chars_per_line=22):
     return lines
 
 
-def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, top_pad=120):
+def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_bottom=0, crop_left=0, crop_right=0, top_pad=120):
     """Download a reel and apply meme format: white canvas header + bold text + video below."""
     for dep in ("yt-dlp", "ffmpeg"):
         if not check_dependency(dep):
@@ -254,13 +254,20 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, top_p
         return
     yield sse("[OK] Conversion complete.")
 
-    # ── OPTIONAL CROP ────────────────────────────────────────────────────────
-    if crop_top > 0:
+    # ── OPTIONAL CROP (all 4 sides, single ffmpeg call) ──────────────────────
+    if crop_top > 0 or crop_bottom > 0 or crop_left > 0 or crop_right > 0:
         cropped_path = os.path.join(BASE_DIR, "meme_cropped.mp4")
-        yield sse(f"  Cropping top {crop_top}px from source video...")
+        parts = []
+        if crop_top    > 0: parts.append(f"top {crop_top}px")
+        if crop_bottom > 0: parts.append(f"bottom {crop_bottom}px")
+        if crop_left   > 0: parts.append(f"left {crop_left}px")
+        if crop_right  > 0: parts.append(f"right {crop_right}px")
+        yield sse(f"  Cropping {', '.join(parts)} from source video...")
+        new_w = f"iw-{crop_left}-{crop_right}"
+        new_h = f"ih-{crop_top}-{crop_bottom}"
         code, _, stderr = run_cmd([
             "ffmpeg", "-y", "-i", conv_path,
-            "-vf", f"crop=iw:ih-{crop_top}:0:{crop_top}",
+            "-vf", f"crop={new_w}:{new_h}:{crop_left}:{crop_top}",
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             "-c:a", "copy",
             cropped_path,
@@ -710,11 +717,14 @@ def meme():
     meme_text  = data.get("meme_text", "")
     watermark  = data.get("watermark", "")
     font_key   = data.get("font", "impact")
-    crop_top   = max(0, int(data.get("crop_top", 0) or 0))
-    top_pad    = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
+    crop_top    = max(0, int(data.get("crop_top",    0) or 0))
+    crop_bottom = max(0, int(data.get("crop_bottom", 0) or 0))
+    crop_left   = max(0, int(data.get("crop_left",   0) or 0))
+    crop_right  = max(0, int(data.get("crop_right",  0) or 0))
+    top_pad     = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
 
     def generate():
-        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, top_pad)
+        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad)
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
