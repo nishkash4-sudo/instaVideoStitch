@@ -1161,7 +1161,9 @@
     .crop-preview-wrap {
       position: relative;
       width: 100%;
-      height: 420px;
+      aspect-ratio: 9 / 16;
+      max-width: 340px;
+      margin: 0 auto;
       overflow: hidden;
       background: var(--surface2);
       cursor: ns-resize;
@@ -1696,6 +1698,24 @@
               </div>
             </div>
 
+            <!-- Top padding -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">
+                Top Padding
+                <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(shifts text &amp; video down)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input
+                  type="range"
+                  id="memeTopPad"
+                  min="0" max="300" step="10" value="60"
+                  oninput="onTopPadChange(this.value)"
+                  style="flex:1;accent-color:var(--ig3);"
+                />
+                <span id="memeTopPadLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:38px;text-align:right;">60px</span>
+              </div>
+            </div>
+
             <button class="single-dl-btn" id="memeBtn" onclick="startMeme()">
               <span class="spinner" id="memeSpinner"></span>
               <span id="memeBtnLabel">🎬 Create Meme Reel</span>
@@ -2178,9 +2198,19 @@
     }
 
     /* ── Meme Edit ── */
+    function getMemeTopPad() {
+      return parseInt(document.getElementById('memeTopPad').value) || 60;
+    }
+
+    function onTopPadChange(val) {
+      document.getElementById('memeTopPadLabel').textContent = val + 'px';
+      updateMemePreview();
+    }
+
     function updateMemePreview() {
       const text = document.getElementById('memeText').value.trim();
       const preview = document.getElementById('memePreview');
+      const topPad = getMemeTopPad();
       if (!text) { preview.textContent = 'Start typing to preview layout…'; return; }
       // Match Python wrap_text logic (22 chars per line)
       const words = text.split(' ');
@@ -2190,7 +2220,7 @@
         else cur = cur ? cur + ' ' + w : w;
       }
       if (cur) lines.push(cur);
-      const headerH = 80 * 2 + lines.length * 100;
+      const headerH = topPad + lines.length * 100 + 28;
       preview.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''} · ~${headerH}px header · ~${1920 - headerH}px video`;
     }
 
@@ -2245,7 +2275,7 @@
       fetch('/meme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropPx }),
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropPx, top_pad: getMemeTopPad() }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
