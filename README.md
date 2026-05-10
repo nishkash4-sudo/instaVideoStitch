@@ -1,6 +1,6 @@
 # InstaStitch
 
-A local web app that downloads Instagram Reels and turns them into polished audio, video, or meme-format clips — all in one click, fully on your machine.
+> **Download Instagram Reels. Stitch them together. Turn them into memes. All on your machine — no uploads, no cloud, no cost.**
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
@@ -10,69 +10,54 @@ A local web app that downloads Instagram Reels and turns them into polished audi
 
 ---
 
-## Features
+## What is this?
 
-### ⬇ Single Download
-- Download one Reel as **high-quality MP3** or **QuickTime-compatible MP4** (H.264)
-- Automatically extract the **post caption** after download
-- Optional **AI transcription** powered by OpenAI Whisper (`OPENAI_API_KEY` required)
+InstaStitch is a local web app that runs entirely on your computer. Open it in your browser, paste Instagram Reel links, and get back polished audio, video, or meme-format clips — in seconds.
 
-### ✦ Multi Stitch
-- Paste up to **30 Reel URLs** at once (newline / comma / space separated)
-- Merge them into one **MP3** (192kbps, 44.1kHz stereo) or one **MP4** (1080×1920, 30fps, H.264)
-- All clips are normalized to a consistent format before stitching
-
-### 🎬 Meme Edit
-- Paste a single Reel URL + your caption text
-- Generates the classic **Instagram meme format**: white header with bold text above the video
-- Supports **emojis** via Twemoji rendering (pilmoji)
-- Choose from three fonts: **Impact**, **Helvetica**, or **Georgia**
-- Add an optional **@watermark** in the bottom-right corner
-- Extracts the **original post caption** alongside your meme output
-
-### All Modes
-- 📡 **Live log** — real-time streaming progress via Server-Sent Events (SSE)
-- 🧹 **Auto cleanup** — all intermediate files deleted after the final output is ready
-- 💻 **Runs fully locally** — no uploads, no cloud, no cost
+No accounts. No subscriptions. No data leaving your machine.
 
 ---
 
-## How It Works
+## Three things it does
+
+### ⬇ Single Download
+Paste one Reel URL → get a high-quality MP3 or MP4 file, plus the original post caption pulled automatically. Optionally transcribe the audio to text using OpenAI Whisper.
+
+### ✦ Multi Stitch
+Paste up to 30 Reel URLs → get one merged file. All clips are automatically normalized to the same format before joining, so the final audio or video is seamless.
+
+### 🎬 Meme Edit
+Paste a Reel URL + your caption text → get the classic Instagram meme format: white header with bold text on top, video below, all in one portrait clip. Full creative controls: font choice, top padding, crop the original video, optional watermark.
+
+---
+
+## How it works — plain English
 
 ### ⬇ Single Download
 
 ```
-Instagram Reel URL
+You paste a URL
         │
         ▼
-┌─────────────────────────────────────────────────────┐
-│  yt-dlp (download + --write-info-json)              │
-│                                                     │
-│  Audio: -x --audio-format mp3 --audio-quality 0    │
-│  Video: -f bestvideo+bestaudio --merge-output-format mp4│
-│                                                     │
-│  --write-info-json writes metadata yt-dlp already  │
-│  fetched (zero extra API calls) → single_output.   │
-│  {mp3|mp4}.info.json / single_raw.info.json        │
-│  Caption (description field) read from that file.  │
-└─────────────────────────────────────────────────────┘
+  yt-dlp fetches the Reel from Instagram
+  (same way your browser would — no special access needed)
         │
-        ▼  (video only)
-┌───────────────────┐
-│  ffmpeg           │  -c:v libx264 -crf 18  →  H.264 re-encode
-│  (H.264 convert)  │  ensures QuickTime / iOS compatibility
-└───────────────────┘
+        ├─── Audio path ──────────────────────────────────────
+        │    Strips the video, keeps only the audio
+        │    Saves as high-quality MP3
         │
-        ▼  (optional)
-┌───────────────────┐
-│  OpenAI Whisper   │  POST audio to transcriptions endpoint
-│  (transcription)  │  model: whisper-1, language: hi (Hinglish-aware)
-└───────────────────┘
+        └─── Video path ──────────────────────────────────────
+             Downloads best available quality
+             Re-encodes to H.264 so it plays on iPhone/QuickTime
+             │
+             └─── Optional: Transcribe ─────────────────────
+                  Sends the audio to OpenAI Whisper
+                  Gets back a text transcript
+                  (requires your own OpenAI API key)
         │
         ▼
-  single_output.mp3 / single_output.mp4
-  + caption text
-  + transcript.txt  (if requested)
+  Your file is ready to download
+  + the original post caption is shown automatically
 ```
 
 ---
@@ -80,36 +65,25 @@ Instagram Reel URL
 ### ✦ Multi Stitch
 
 ```
-Up to 30 Instagram Reel URLs
+You paste 2–30 URLs
         │
         ▼
-┌───────────────────┐
-│  yt-dlp           │  Audio: -x --audio-format mp3
-│  (bulk download)  │  Video: -f bestvideo+bestaudio/best
-└───────────────────┘
+  yt-dlp downloads each Reel one by one
         │
         ▼
-┌───────────────────────────────────────────┐
-│  ffmpeg (normalize — per clip)            │
-│                                           │
-│  Audio │ codec: libmp3lame                │
-│        │ bitrate: 192kbps                 │
-│        │ sample rate: 44,100Hz stereo     │
-│                                           │
-│  Video │ resolution: 1080×1920            │
-│        │ frame rate: 30fps                │
-│        │ video codec: libx264, CRF 23     │
-│        │ audio codec: AAC 128kbps         │
-└───────────────────────────────────────────┘
+  ffmpeg normalizes every clip to the same format
+  (same resolution, frame rate, audio bitrate — so they join cleanly)
+
+  Audio clips → 192kbps MP3, 44,100Hz stereo
+  Video clips → 1080×1920, 30fps, H.264
+
         │
         ▼
-┌───────────────────┐
-│  ffmpeg           │  concat demuxer → single stream
-│  (merge/concat)   │  no re-encode quality loss
-└───────────────────┘
+  ffmpeg joins all clips into one file
+  (no quality loss — just concatenation)
         │
         ▼
-  output.mp3 / output.mp4
+  One MP3 or MP4 — ready to download
 ```
 
 ---
@@ -117,139 +91,137 @@ Up to 30 Instagram Reel URLs
 ### 🎬 Meme Edit
 
 ```
-Instagram Reel URL + Meme Caption Text
+You paste a URL + your caption text
         │
         ▼
-┌─────────────────────────────────────────────────────┐
-│  yt-dlp (download + --write-info-json)              │
-│                                                     │
-│  -f bestvideo+bestaudio --merge-output-format mp4  │
-│                                                     │
-│  --write-info-json writes metadata yt-dlp already  │
-│  fetched (zero extra API calls) → meme_raw.info.json│
-│  Original post caption read from that file and     │
-│  streamed to UI via SSE CAPTION: event.            │
-└─────────────────────────────────────────────────────┘
+  yt-dlp downloads the Reel
+  + grabs the thumbnail so you can preview it instantly in the browser
+  + saves the original post caption automatically
         │
         ▼
-┌───────────────────┐
-│  ffmpeg           │  -c:v libx264 -crf 18  →  H.264 intermediate
-│  (H.264 convert)  │  (meme_raw.mp4)
-└───────────────────┘
+  [Optional] Crop the top of the video
+  ─────────────────────────────────────────────────────────────
+  If the original Reel has its own header/text baked in,
+  drag the red line in the preview to cut it off.
+  ffmpeg removes those pixels before anything else happens.
+  ─────────────────────────────────────────────────────────────
         │
         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Python (layout math)                                           │
-│                                                                 │
-│  wrap_text()  →  split caption into lines ≤ 22 chars           │
-│  header_h     =  top_pad(60) + lines×line_h(100) + gap(28)     │
-│  video_h      =  1920 − header_h                               │
-└─────────────────────────────────────────────────────────────────┘
+  Python figures out the layout:
+  • How many lines does your caption wrap to?
+  • How tall should the white header be?
+  • Where exactly does the text sit? (always flush above the video)
+  • How tall is the video section? (everything below the header)
         │
         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Pillow + pilmoji (header image generation)                     │
-│                                                                 │
-│  • Create white RGB canvas: 1080 × header_h px                 │
-│  • Select font: Impact / Helvetica / Georgia (user choice)      │
-│  • pilmoji renders each text line + emoji as Twemoji bitmaps    │
-│  • Text is bottom-anchored → visually flush against video       │
-│  • Save as header.png                                           │
-└─────────────────────────────────────────────────────────────────┘
+  Pillow (Python image library) draws the white header image:
+  • White canvas, 1080px wide
+  • Your caption text — centered, bold
+  • Emoji supported (rendered as real Twemoji images)
+  • Choose Impact, Helvetica, or Georgia font
+  • Adjust top padding → pushes text + video lower (more breathing room)
+  • Optional @watermark in the bottom corner
         │
         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  ffmpeg (filter_complex stacking)                               │
-│                                                                 │
-│  -loop 1 -i header.png                                         │
-│  -i meme_raw.mp4                                               │
-│                                                                 │
-│  filter:                                                        │
-│    [1:v] scale=1080:{video_h}, pad to fit, white bars [vid]    │
-│    [0:v][vid] vstack [out]                                      │
-│                                                                 │
-│  watermark (optional):                                          │
-│    drawtext @handle bottom-right, white + black shadow          │
-│                                                                 │
-│  output: libx264 CRF 20, AAC 192kbps, -movflags +faststart     │
-└─────────────────────────────────────────────────────────────────┘
+  ffmpeg stacks everything into one video:
+  ┌──────────────────────────┐
+  │   White header + text    │  ← generated by Pillow
+  ├──────────────────────────┤
+  │                          │
+  │      Original video      │  ← cropped + scaled to fill
+  │                          │
+  └──────────────────────────┘
+  Output: 1080×1920, H.264, plays on any device
         │
         ▼
-  meme_output.mp4  (1080×1920, H.264, QuickTime-compatible)
-  + original post caption shown in UI
+  meme_output.mp4 — ready to download
+  + original post caption shown in the app
 ```
 
 ---
 
-## Tool Responsibility Summary
+## Live progress, always
 
-| Tool | Role |
-|------|------|
-| **yt-dlp** | Download Reel video/audio; extract post metadata (caption, title) |
-| **ffmpeg** | H.264 encoding, audio normalization, clip concat, video stacking (vstack) |
-| **Pillow** | Generate the white header image with text layout for meme format |
-| **pilmoji** | Render emoji characters as Twemoji bitmaps inside Pillow canvas |
-| **OpenAI Whisper** | Transcribe audio to text (Hinglish-aware, optional) |
-| **Flask** | HTTP server; SSE streaming for live progress logs |
-| **Python** | Layout math (text wrapping, header height calculation), file orchestration |
+Every mode streams live logs to your browser as things happen — you see each step as it completes, not a spinner that might be frozen.
+
+```
+[1/3] Downloading reel...
+  ✓ Download complete
+[OK] Caption extracted.
+[2/3] Converting to H.264...
+  Cropping top 350px from source video...
+[3/3] Rendering meme layout...
+  ✓ Header image created (1080×448px)
+DONE
+```
 
 ---
 
-## Output Files
+## Tool breakdown
 
-| File | Created by | Mode |
-|------|------------|------|
-| `single_output.mp3` | yt-dlp | Single Download (audio) |
-| `single_output.mp4` | yt-dlp + ffmpeg | Single Download (video) |
-| `output.mp3` | ffmpeg concat | Multi Stitch (audio) |
-| `output.mp4` | ffmpeg concat | Multi Stitch (video) |
-| `meme_output.mp4` | Pillow + ffmpeg | Meme Edit |
-| `transcript.txt` | OpenAI Whisper | Single Download (if transcription enabled) |
+| Tool | What it actually does |
+|------|-----------------------|
+| **yt-dlp** | Downloads the Reel video/audio from Instagram. Also fetches the thumbnail and post caption metadata — all from the same request, no extra calls. |
+| **ffmpeg** | The video engine. Does H.264 encoding, audio normalization, clip stitching, cropping, and stacking the header on top of the video. |
+| **Pillow** | Python's image library. Draws the white meme header canvas and places text on it. |
+| **pilmoji** | Extends Pillow to render emoji as real Twemoji images (the Twitter-style colorful ones) instead of broken boxes. |
+| **OpenAI Whisper** | Cloud transcription service. Only used if you enable it in Single Download mode. Requires your own API key. |
+| **Flask** | The local web server. Powers the browser UI and streams progress updates in real time. |
 
-All files are saved to the project root and overwritten on each run.
+---
+
+## Output files
+
+| File | Mode | What it contains |
+|------|------|-----------------|
+| `single_output.mp3` | Single Download (audio) | High-quality MP3 of the Reel |
+| `single_output.mp4` | Single Download (video) | H.264 MP4, QuickTime-compatible |
+| `output.mp3` | Multi Stitch (audio) | All clips merged into one MP3 |
+| `output.mp4` | Multi Stitch (video) | All clips merged into one MP4 |
+| `meme_output.mp4` | Meme Edit | White header + video, 1080×1920 |
+| `single_transcript.txt` | Single Download (if enabled) | Full text transcript |
+
+All files are saved to the project folder and overwritten on each new run — download before running again.
 
 ---
 
 ## Requirements
 
 - macOS (or any system with Python 3.9+)
-- [Homebrew](https://brew.sh) (Mac)
-- `ffmpeg`
-- `yt-dlp`
-- `flask`
-- `Pillow`
-- `pilmoji`
-- `OPENAI_API_KEY` in a `.env` file (only needed for transcription)
+- `ffmpeg` — the video processing engine
+- `yt-dlp` — the downloader
+- `flask`, `Pillow`, `pilmoji` — Python packages
+- `OPENAI_API_KEY` in a `.env` file — only needed for transcription
 
 ---
 
 ## Installation
 
 ```bash
-# 1. Install Homebrew (if not already installed)
+# 1. Install Homebrew (if you don't have it — Mac only)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# 2. Add Homebrew to PATH (Apple Silicon Macs)
+# 2. Add Homebrew to your terminal path (Apple Silicon Macs)
 echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 
-# 3. Install ffmpeg and yt-dlp
+# 3. Install the video tools
 brew install ffmpeg yt-dlp
 
-# 4. Clone the repo
+# 4. Clone this repo
 git clone https://github.com/nishkash4-sudo/InstaStitch.git
 cd InstaStitch
 
-# 5. Create a virtual environment and install dependencies
+# 5. Set up Python and install dependencies
 python3 -m venv venv
 venv/bin/pip install flask Pillow pilmoji
 
-# 6. (Optional) Add OpenAI API key for transcription
+# 6. (Optional) Add your OpenAI key for transcription
 echo 'OPENAI_API_KEY=sk-...' > .env
 ```
 
 ---
 
-## Usage
+## Running it
 
 ```bash
 cd ~/Desktop/InstaStitch
@@ -260,42 +232,42 @@ Then open **http://localhost:8080** in your browser.
 
 ---
 
-## Mode Walkthroughs
+## How to use each mode
 
 ### ⬇ Single Download
 1. Click the **Single Download** tab
 2. Choose **Audio (MP3)** or **Video (MP4)**
-3. Optionally check **Transcribe** (requires OpenAI API key)
+3. Optionally check **Transcribe** (needs OpenAI API key)
 4. Paste your Reel URL → click **Download**
-5. Watch the live log, then grab your file + caption
+5. Watch the live log → download your file and read the caption
 
 ### ✦ Multi Stitch
 1. Click the **Multi Stitch** tab
-2. Choose **Audio** or **Video** output
-3. Paste links individually or use **Bulk Paste** (up to 30 URLs)
-4. Click **Stitch Audio / Stitch Video**
-5. Watch the live log, then download the merged file
+2. Choose **Audio** or **Video**
+3. Paste links one by one or use **Bulk Paste** (up to 30 URLs)
+4. Click **Stitch** → watch the log → download the merged file
 
 ### 🎬 Meme Edit
 1. Click the **Meme Edit** tab
-2. Paste a Reel URL
-3. Type your meme caption (live preview shows line count + header height)
-4. Choose a font: **Impact**, **Helvetica**, or **Georgia**
-5. Optionally add a `@watermark` handle
-6. Click **Create Meme Reel**
-7. Download the result — white header + bold text + original video below
+2. Paste a Reel URL — a **live thumbnail preview** loads automatically
+3. If the original video has its own header, **drag the red line** to crop it off
+4. Type your meme caption — see a live line count + header size preview
+5. Pick a font: **Impact**, **Helvetica**, or **Georgia**
+6. Adjust **Top Padding** to add breathing room above the text
+7. Add an optional **@watermark** in the corner
+8. Click **Create Meme Reel** → download the result
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 InstaStitch/
-├── app.py              # Flask server + all download/process pipelines
+├── app.py              # Flask server — all download, stitch, and meme pipelines
 ├── templates/
-│   └── index.html      # Single-page UI (3-tab: Single / Stitch / Meme)
-├── .env                # OPENAI_API_KEY (not committed)
-├── venv/               # Python virtual environment (not committed)
+│   └── index.html      # Single-page UI with 3 tabs
+├── .env                # Your OPENAI_API_KEY (not committed to git)
+├── venv/               # Python virtual environment (not committed to git)
 └── .claude/
     └── launch.json     # Dev server config
 ```
@@ -304,8 +276,8 @@ InstaStitch/
 
 ## Notes
 
-- This tool is intended for **personal local use only**
-- Instagram may update their platform — if downloads fail, update yt-dlp: `brew upgrade yt-dlp`
-- Output files are overwritten on each new run — download before running again
-- The meme header height auto-adjusts based on how many lines your caption wraps to
-- Emoji rendering requires an internet connection on first use (pilmoji fetches Twemoji assets)
+- **Personal use only** — this tool is for your own local use
+- If downloads stop working, update yt-dlp: `brew upgrade yt-dlp`
+- Files are overwritten each run — save your output before running again
+- Emoji rendering fetches Twemoji assets on first use (needs internet)
+- The meme header height auto-adjusts based on how many lines your caption wraps into
