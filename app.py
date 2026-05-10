@@ -89,7 +89,7 @@ def _read_and_delete_info_json(output_path, is_merge):
                 with open(p, encoding="utf-8") as f:
                     meta = json.load(f)
                 caption  = meta.get("description") or meta.get("title") or ""
-                username = meta.get("uploader_id") or meta.get("uploader") or ""
+                username = meta.get("uploader") or meta.get("uploader_id") or ""
                 return caption, username
             except Exception:
                 pass
