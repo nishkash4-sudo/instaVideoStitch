@@ -21,6 +21,7 @@ SINGLE_VIDEO = os.path.join(BASE_DIR, "single_output.mp4")
 TRANSCRIPT_AUDIO = os.path.join(BASE_DIR, "transcript_input.mp3")
 TRANSCRIPT_TEXT = os.path.join(BASE_DIR, "single_transcript.txt")
 MEME_OUTPUT = os.path.join(BASE_DIR, "meme_output.mp4")
+MEME_THUMB_BASE = os.path.join(BASE_DIR, "meme_preview_thumb")
 ENV_FILE = os.path.join(BASE_DIR, ".env")
 
 MEME_FONTS = {
@@ -189,7 +190,7 @@ def wrap_text(text, chars_per_line=22):
     return lines
 
 
-def meme_edit(url, meme_text, watermark="", font_key="impact"):
+def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0):
     """Download a reel and apply meme format: white canvas header + bold text + video below."""
     for dep in ("yt-dlp", "ffmpeg"):
         if not check_dependency(dep):
@@ -248,6 +249,24 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         yield sse(f"[ERROR] Conversion failed. {stderr.strip()[-200:]}")
         return
     yield sse("[OK] Conversion complete.")
+
+    # ── OPTIONAL CROP ────────────────────────────────────────────────────────
+    if crop_top > 0:
+        cropped_path = os.path.join(BASE_DIR, "meme_cropped.mp4")
+        yield sse(f"  Cropping top {crop_top}px from source video...")
+        code, _, stderr = run_cmd([
+            "ffmpeg", "-y", "-i", conv_path,
+            "-vf", f"crop=iw:ih-{crop_top}:0:{crop_top}",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+            "-c:a", "copy",
+            cropped_path,
+        ])
+        if os.path.exists(conv_path):
+            os.remove(conv_path)
+        if code != 0 or not os.path.exists(cropped_path):
+            yield sse(f"[ERROR] Crop failed. {stderr.strip()[-200:]}")
+            return
+        conv_path = cropped_path   # rest of pipeline uses the cropped file
 
     # ── STEP 4: BUILD MEME LAYOUT ─────────────────────────────────────────────
     yield sse("[3/3] Rendering meme layout...")
@@ -326,7 +345,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact"):
         MEME_OUTPUT,
     ])
 
-    for p in (conv_path, header_png):
+    for p in (conv_path, header_png, os.path.join(BASE_DIR, "meme_cropped.mp4")):
         if os.path.exists(p):
             os.remove(p)
 
@@ -641,6 +660,34 @@ def single():
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+@app.route("/preview", methods=["POST"])
+def preview():
+    """Fetch just the thumbnail for a Reel URL (no video download). Returns image or 204."""
+    data = request.get_json(force=True)
+    url = data.get("url", "").strip()
+    if not url:
+        return "", 204
+
+    # Clean up any previous thumbnail
+    for ext in ("jpg", "jpeg", "webp", "png"):
+        p = f"{MEME_THUMB_BASE}.{ext}"
+        if os.path.exists(p):
+            os.remove(p)
+
+    run_cmd([
+        "yt-dlp", "--write-thumbnail", "--no-download",
+        "-o", MEME_THUMB_BASE, url,
+    ])
+
+    for ext in ("jpg", "jpeg", "webp", "png"):
+        p = f"{MEME_THUMB_BASE}.{ext}"
+        if os.path.exists(p):
+            mime = "image/webp" if ext == "webp" else "image/jpeg"
+            return send_file(p, mimetype=mime)
+
+    return "", 204  # thumbnail unavailable — not an error
+
+
 @app.route("/meme", methods=["POST"])
 def meme():
     data = request.get_json(force=True)
@@ -648,9 +695,10 @@ def meme():
     meme_text  = data.get("meme_text", "")
     watermark  = data.get("watermark", "")
     font_key   = data.get("font", "impact")
+    crop_top   = max(0, int(data.get("crop_top", 0) or 0))
 
     def generate():
-        yield from meme_edit(url, meme_text, watermark, font_key)
+        yield from meme_edit(url, meme_text, watermark, font_key, crop_top)
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

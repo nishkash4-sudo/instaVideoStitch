@@ -1150,6 +1150,114 @@
       border: 1px solid rgba(250,204,21,0.2);
     }
 
+    /* ── Meme crop preview card ── */
+    .crop-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .crop-preview-wrap {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
+      background: var(--surface2);
+      cursor: ns-resize;
+      user-select: none;
+    }
+    .crop-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      gap: 8px;
+    }
+    .crop-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: none;
+    }
+    .crop-shade {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: rgba(248,113,113,0.28);
+      pointer-events: none;
+      height: 0;
+    }
+    .crop-handle-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: #f87171;
+      top: 0;
+    }
+    .crop-handle-tag {
+      position: absolute;
+      right: 10px;
+      top: -11px;
+      background: #f87171;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      white-space: nowrap;
+    }
+    .crop-controls {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .crop-presets { display: flex; gap: 6px; }
+    .crop-preset-btn {
+      padding: 4px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.73rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .crop-preset-btn:hover { border-color: rgba(248,113,113,0.4); color: var(--text); }
+    .crop-preset-btn.active {
+      border-color: #f87171;
+      background: rgba(248,113,113,0.1);
+      color: var(--text);
+    }
+    .crop-px-input {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .crop-px-input input {
+      width: 62px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      text-align: right;
+      font-family: inherit;
+      outline: none;
+    }
+    .crop-px-input input:focus {
+      border-color: rgba(248,113,113,0.45);
+    }
+
     /* ── Responsive ── */
     @media (max-width: 780px) {
       .workspace { grid-template-columns: 1fr; }
@@ -1497,7 +1605,37 @@
                 class="single-url-input"
                 id="memeUrl"
                 placeholder="https://www.instagram.com/reel/..."
+                oninput="onMemeUrlInput()"
               />
+            </div>
+
+            <!-- Crop-top preview card -->
+            <div class="crop-card" id="memeCropCard">
+              <div class="crop-preview-wrap" id="cropWrap">
+                <div class="crop-placeholder" id="cropPlaceholder">
+                  <span style="opacity:0.4">⬆</span>
+                  <span>Paste URL above to preview source video</span>
+                </div>
+                <img class="crop-thumb" id="cropThumb" alt="Video preview" />
+                <div class="crop-shade" id="cropShade"></div>
+                <div class="crop-handle-line" id="cropHandleLine" style="display:none">
+                  <div class="crop-handle-tag" id="cropHandleTag">Crop: 0px</div>
+                </div>
+              </div>
+              <div class="crop-controls">
+                <div class="crop-presets">
+                  <button class="crop-preset-btn active" data-crop="0"   onclick="setCropPx(0)">None</button>
+                  <button class="crop-preset-btn"        data-crop="200" onclick="setCropPx(200)">200px</button>
+                  <button class="crop-preset-btn"        data-crop="350" onclick="setCropPx(350)">350px</button>
+                  <button class="crop-preset-btn"        data-crop="500" onclick="setCropPx(500)">500px</button>
+                </div>
+                <div class="crop-px-input">
+                  <span>Crop top</span>
+                  <input type="number" id="cropPxInput" value="0" min="0" max="900" step="10"
+                         oninput="onCropInput(this.value)" />
+                  <span>px</span>
+                </div>
+              </div>
             </div>
 
             <!-- Meme text -->
@@ -2107,7 +2245,7 @@
       fetch('/meme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, meme_text: memeText, watermark, font }),
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropPx }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
@@ -2177,6 +2315,129 @@
         setTimeout(() => btn.textContent = '📋 Copy', 2000);
       });
     }
+
+    // ── Meme crop preview ──────────────────────────────────────────────────────
+    const ASSUMED_VIDEO_H = 1920;   // Instagram portrait standard
+    let cropPx = 0;
+    let thumbFetchController = null;
+
+    function fetchThumb(url) {
+      if (thumbFetchController) thumbFetchController.abort();
+      thumbFetchController = new AbortController();
+
+      const thumb = document.getElementById('cropThumb');
+      const ph    = document.getElementById('cropPlaceholder');
+      thumb.style.display = 'none';
+      ph.style.display = 'flex';
+      ph.innerHTML = '<span style="opacity:0.4">⏳</span><span>Loading preview…</span>';
+
+      fetch('/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+        signal: thumbFetchController.signal,
+      })
+      .then(res => {
+        if (res.status === 204 || !res.ok) throw new Error('no thumb');
+        return res.blob();
+      })
+      .then(blob => {
+        thumb.src = URL.createObjectURL(blob);
+        thumb.style.display = 'block';
+        ph.style.display = 'none';
+        updateCropLine();
+      })
+      .catch(e => {
+        if (e.name === 'AbortError') return;
+        ph.innerHTML = '<span style="opacity:0.4">⬆</span><span>Paste URL above to preview source video</span>';
+      });
+    }
+
+    // Called from URL input's oninput (debounced)
+    let thumbDebounce = null;
+    function onMemeUrlInput() {
+      const url = document.getElementById('memeUrl').value.trim();
+      clearTimeout(thumbDebounce);
+      if (!url.includes('instagram.com')) return;
+      thumbDebounce = setTimeout(() => fetchThumb(url), 800);
+    }
+
+    function setCropPx(px) {
+      cropPx = Math.max(0, Math.min(px, 900));
+      document.getElementById('cropPxInput').value = cropPx;
+      document.querySelectorAll('.crop-preset-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.crop) === cropPx);
+      });
+      updateCropLine();
+    }
+
+    function onCropInput(val) {
+      const px = Math.max(0, Math.min(parseInt(val) || 0, 900));
+      cropPx = px;
+      document.querySelectorAll('.crop-preset-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.crop) === cropPx);
+      });
+      updateCropLine();
+    }
+
+    function updateCropLine() {
+      const wrap  = document.getElementById('cropWrap');
+      const shade = document.getElementById('cropShade');
+      const line  = document.getElementById('cropHandleLine');
+      const tag   = document.getElementById('cropHandleTag');
+
+      if (cropPx === 0) {
+        shade.style.height = '0';
+        line.style.display = 'none';
+        return;
+      }
+
+      // Map video pixels → display pixels
+      // object-fit:cover + object-position:top on portrait image:
+      // scale = containerW / 1080  →  displayed height in video px = containerH / scale = containerH * 1080 / containerW
+      const containerW = wrap.offsetWidth;
+      const containerH = wrap.offsetHeight;
+      const videoPxPerDisplayPx = ASSUMED_VIDEO_H * containerW / (1080 * containerH);
+      const displayY = Math.min(Math.round(cropPx / videoPxPerDisplayPx), containerH);
+
+      shade.style.height = displayY + 'px';
+      line.style.display = 'block';
+      line.style.top     = displayY + 'px';
+      tag.textContent    = `Crop: ${cropPx}px`;
+    }
+
+    function initCropDrag() {
+      const wrap = document.getElementById('cropWrap');
+      let dragging = false;
+
+      function getY(e, rect) {
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return Math.max(0, Math.min(clientY - rect.top, rect.height));
+      }
+      function yToPx(y, rect) {
+        const videoPxPerDisplayPx = ASSUMED_VIDEO_H * rect.width / (1080 * rect.height);
+        return Math.round(y * videoPxPerDisplayPx);
+      }
+
+      wrap.addEventListener('mousedown',  e => { dragging = true; e.preventDefault(); });
+      wrap.addEventListener('touchstart', e => { dragging = true; }, { passive: true });
+
+      document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const rect = wrap.getBoundingClientRect();
+        setCropPx(yToPx(getY(e, rect), rect));
+      });
+      document.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        const rect = wrap.getBoundingClientRect();
+        setCropPx(yToPx(getY(e, rect), rect));
+      }, { passive: true });
+
+      document.addEventListener('mouseup',  () => { dragging = false; });
+      document.addEventListener('touchend', () => { dragging = false; });
+    }
+
+    initCropDrag();
   </script>
 </body>
 </html>
