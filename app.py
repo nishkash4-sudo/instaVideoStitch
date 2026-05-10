@@ -192,7 +192,7 @@ def wrap_text(text, chars_per_line=22):
     return lines
 
 
-def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_bottom=0, crop_left=0, crop_right=0, top_pad=120):
+def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_bottom=0, crop_left=0, crop_right=0, top_pad=120, font_size=72, chars_per_line=22):
     """Download a reel and apply meme format: white canvas header + bold text + video below."""
     for dep in ("yt-dlp", "ffmpeg"):
         if not check_dependency(dep):
@@ -282,8 +282,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
     # ── STEP 4: BUILD MEME LAYOUT ─────────────────────────────────────────────
     yield sse("[3/3] Rendering meme layout...")
 
-    lines      = wrap_text(meme_text.upper() if font_key == "impact" else meme_text, chars_per_line=22)
-    font_size  = 72
+    lines      = wrap_text(meme_text.upper() if font_key == "impact" else meme_text, chars_per_line=chars_per_line)
     line_h     = font_size + 28
     bottom_gap = 28                               # small gap between text and video
     header_h   = top_pad + len(lines) * line_h + bottom_gap
@@ -334,22 +333,14 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
         return
 
     # --- ffmpeg: stack header PNG + video ---
-    # When the user cropped the source video, the remaining clip is shorter than
-    # video_h. Using force_original_aspect_ratio=decrease + pad would center it
-    # with white bars. Instead, scale directly to fill video_h (slight vertical
-    # stretch is acceptable; eliminates the white gap).
-    if crop_top > 0:
-        filt = (
-            f"[1:v]scale=1080:{video_h}[vid];"
-            f"[0:v][vid]vstack[out]"
-        )
-    else:
-        filt = (
-            f"[1:v]scale=1080:{video_h}:"
-            f"force_original_aspect_ratio=decrease,"
-            f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:white[vid];"
-            f"[0:v][vid]vstack[out]"
-        )
+    # Always preserve aspect ratio — scale to fit video_h, pad remainder with
+    # black (neutral; avoids stretch when 4-side crop changes the aspect ratio).
+    filt = (
+        f"[1:v]scale=1080:{video_h}:"
+        f"force_original_aspect_ratio=decrease,"
+        f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:black[vid];"
+        f"[0:v][vid]vstack[out]"
+    )
 
     code, _, stderr = run_cmd([
         "ffmpeg", "-y",
@@ -721,10 +712,12 @@ def meme():
     crop_bottom = max(0, int(data.get("crop_bottom", 0) or 0))
     crop_left   = max(0, int(data.get("crop_left",   0) or 0))
     crop_right  = max(0, int(data.get("crop_right",  0) or 0))
-    top_pad     = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
+    top_pad      = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
+    font_size    = max(28, min(int(data.get("font_size", 72) or 72), 120))
+    chars_per_line = max(10, min(int(data.get("chars_per_line", 22) or 22), 40))
 
     def generate():
-        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad)
+        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad, font_size, chars_per_line)
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

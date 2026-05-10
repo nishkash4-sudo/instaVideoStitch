@@ -1733,6 +1733,26 @@
               </div>
             </div>
 
+            <!-- Text size + Line width -->
+            <div style="margin-bottom:18px">
+              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Text Size &amp; Line Width</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;align-items:center;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input type="range" id="memeTextSize" min="28" max="120" step="2" value="72"
+                         oninput="onTextSizeChange(this.value)"
+                         style="flex:1;accent-color:var(--ig3);" />
+                  <span id="memeTextSizeLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:34px;text-align:right;">72px</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted);">
+                  Line width
+                  <input type="number" id="memeLineWidth" min="10" max="40" step="1" value="22"
+                         oninput="updateMemePreview()"
+                         style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.76rem;padding:3px 7px;text-align:right;font-family:inherit;outline:none;" />
+                  chars
+                </div>
+              </div>
+            </div>
+
             <!-- Top padding -->
             <div style="margin-bottom:18px">
               <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">
@@ -2251,26 +2271,41 @@
       const v = parseInt(document.getElementById('memeTopPad').value);
       return isNaN(v) ? 120 : v;
     }
+    function getMemeTextSize() {
+      const v = parseInt(document.getElementById('memeTextSize').value);
+      return isNaN(v) ? 72 : v;
+    }
+    function getMemeLineWidth() {
+      const v = parseInt(document.getElementById('memeLineWidth').value);
+      return isNaN(v) ? 22 : v;
+    }
 
     function onTopPadChange(val) {
       document.getElementById('memeTopPadLabel').textContent = val + 'px';
+      updateMemePreview();
+    }
+    function onTextSizeChange(val) {
+      document.getElementById('memeTextSizeLabel').textContent = val + 'px';
       updateMemePreview();
     }
 
     function updateMemePreview() {
       const text = document.getElementById('memeText').value.trim();
       const preview = document.getElementById('memePreview');
-      const topPad = getMemeTopPad();
+      const topPad    = getMemeTopPad();
+      const fontSize  = getMemeTextSize();
+      const lineWidth = getMemeLineWidth();
       if (!text) { preview.textContent = 'Start typing to preview layout…'; return; }
-      // Match Python wrap_text logic (22 chars per line)
+      // Match Python wrap_text logic
       const words = text.split(' ');
       let lines = [], cur = '';
       for (const w of words) {
-        if (cur && cur.length + 1 + w.length > 22) { lines.push(cur); cur = w; }
+        if (cur && cur.length + 1 + w.length > lineWidth) { lines.push(cur); cur = w; }
         else cur = cur ? cur + ' ' + w : w;
       }
       if (cur) lines.push(cur);
-      const headerH = topPad + lines.length * 100 + 28;
+      const lineH   = fontSize + 28;
+      const headerH = topPad + lines.length * lineH + 28;
       preview.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''} · ~${headerH}px header · ~${1920 - headerH}px video`;
     }
 
@@ -2327,7 +2362,7 @@
       fetch('/meme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropTop, crop_bottom: cropBottom, crop_left: cropLeft, crop_right: cropRight, top_pad: getMemeTopPad() }),
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropTop, crop_bottom: cropBottom, crop_left: cropLeft, crop_right: cropRight, top_pad: getMemeTopPad(), font_size: getMemeTextSize(), chars_per_line: getMemeLineWidth() }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
