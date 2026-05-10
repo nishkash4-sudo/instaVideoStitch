@@ -1708,11 +1708,11 @@
                 <input
                   type="range"
                   id="memeTopPad"
-                  min="0" max="300" step="10" value="60"
+                  min="0" max="300" step="10" value="120"
                   oninput="onTopPadChange(this.value)"
                   style="flex:1;accent-color:var(--ig3);"
                 />
-                <span id="memeTopPadLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:38px;text-align:right;">60px</span>
+                <span id="memeTopPadLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:38px;text-align:right;">120px</span>
               </div>
             </div>
 
@@ -2199,7 +2199,8 @@
 
     /* ── Meme Edit ── */
     function getMemeTopPad() {
-      return parseInt(document.getElementById('memeTopPad').value) || 60;
+      const v = parseInt(document.getElementById('memeTopPad').value);
+      return isNaN(v) ? 120 : v;
     }
 
     function onTopPadChange(val) {

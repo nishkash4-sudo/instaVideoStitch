@@ -190,7 +190,7 @@ def wrap_text(text, chars_per_line=22):
     return lines
 
 
-def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, top_pad=60):
+def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, top_pad=120):
     """Download a reel and apply meme format: white canvas header + bold text + video below."""
     for dep in ("yt-dlp", "ffmpeg"):
         if not check_dependency(dep):
@@ -705,7 +705,7 @@ def meme():
     watermark  = data.get("watermark", "")
     font_key   = data.get("font", "impact")
     crop_top   = max(0, int(data.get("crop_top", 0) or 0))
-    top_pad    = max(0, min(int(data.get("top_pad", 60) or 60), 300))
+    top_pad    = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
 
     def generate():
         yield from meme_edit(url, meme_text, watermark, font_key, crop_top, top_pad)
