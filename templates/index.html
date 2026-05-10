@@ -1063,6 +1063,20 @@
 
     .caption-label-icon { font-size: 14px; }
 
+    .username-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(131,52,175,0.12);
+      border: 1px solid rgba(167,139,250,0.25);
+      color: var(--purple);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
     .copy-btn {
       display: flex; align-items: center; gap: 5px;
       background: rgba(167,139,250,0.08);
@@ -1423,6 +1437,7 @@
             <div class="caption-label">
               <span class="caption-label-icon">✍️</span>
               Caption
+              <span class="username-pill" id="captionUsername" style="display:none"></span>
             </div>
             <button class="copy-btn" id="copyBtn" onclick="copyCaption()">
               📋 Copy
@@ -1754,6 +1769,7 @@
             <div class="caption-label">
               <span class="caption-label-icon">✍️</span>
               Original Caption
+              <span class="username-pill" id="memeCaptionUsername" style="display:none"></span>
             </div>
             <button class="copy-btn" id="memeCopyBtn" onclick="copyMemeCaption()">
               📋 Copy
@@ -2073,10 +2089,17 @@
     let captionText = '';
     let transcriptText = '';
 
-    function showCaption(text) {
+    function showCaption(text, username) {
       captionText = text;
       const card = document.getElementById('captionCard');
       document.getElementById('captionBody').textContent = text;
+      const pill = document.getElementById('captionUsername');
+      if (username) {
+        pill.textContent = '@' + username;
+        pill.style.display = 'inline-flex';
+      } else {
+        pill.style.display = 'none';
+      }
       card.style.display = 'block';
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -2152,6 +2175,7 @@
         const dec = new TextDecoder();
         let buf = '';
         let pendingCaption = '';
+        let pendingUsername = '';
         let pendingTranscript = '';
 
         function read() {
@@ -2165,12 +2189,17 @@
               if (msg.startsWith('DONE:')) {
                 resetSingle();
                 showSingleDownload(msg.split(':')[1]);
-                if (pendingCaption) showCaption(pendingCaption);
+                if (pendingCaption) showCaption(pendingCaption, pendingUsername);
                 if (pendingTranscript) showTranscript(pendingTranscript);
               } else if (msg.startsWith('CAPTION:')) {
                 try {
                   const bytes = Uint8Array.from(atob(msg.slice(8)), c => c.charCodeAt(0));
                   pendingCaption = new TextDecoder('utf-8').decode(bytes);
+                } catch(e) {}
+              } else if (msg.startsWith('USERNAME:')) {
+                try {
+                  const bytes = Uint8Array.from(atob(msg.slice(9)), c => c.charCodeAt(0));
+                  pendingUsername = new TextDecoder('utf-8').decode(bytes);
                 } catch(e) {}
               } else if (msg.startsWith('TRANSCRIPT:')) {
                 try {
@@ -2263,6 +2292,7 @@
       const spin = document.getElementById('memeSpinner');
 
       let memeCaptionText = '';
+      let memeUsername = '';
 
       btn.disabled = true;
       spin.style.display = 'block';
@@ -2272,6 +2302,7 @@
       document.getElementById('memeCaptionCard').style.display = 'none';
       document.getElementById('memeLogBody').innerHTML = '';
       memeCaptionText = '';
+      memeUsername = '';
 
       fetch('/meme', {
         method: 'POST',
@@ -2296,6 +2327,13 @@
                 document.getElementById('memeDownloadCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 if (memeCaptionText) {
                   document.getElementById('memeCaptionBody').textContent = memeCaptionText;
+                  const pill = document.getElementById('memeCaptionUsername');
+                  if (memeUsername) {
+                    pill.textContent = '@' + memeUsername;
+                    pill.style.display = 'inline-flex';
+                  } else {
+                    pill.style.display = 'none';
+                  }
                   const cc = document.getElementById('memeCaptionCard');
                   cc.style.display = 'block';
                   cc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2304,6 +2342,11 @@
                 try {
                   const bytes = Uint8Array.from(atob(msg.slice(8)), c => c.charCodeAt(0));
                   memeCaptionText = new TextDecoder('utf-8').decode(bytes);
+                } catch(e) {}
+              } else if (msg.startsWith('USERNAME:')) {
+                try {
+                  const bytes = Uint8Array.from(atob(msg.slice(9)), c => c.charCodeAt(0));
+                  memeUsername = new TextDecoder('utf-8').decode(bytes);
                 } catch(e) {}
               } else {
                 const body = document.getElementById('memeLogBody');

@@ -88,7 +88,9 @@ def _read_and_delete_info_json(output_path, is_merge):
             try:
                 with open(p, encoding="utf-8") as f:
                     meta = json.load(f)
-                return meta.get("description") or meta.get("title") or ""
+                caption  = meta.get("description") or meta.get("title") or ""
+                username = meta.get("uploader_id") or meta.get("uploader") or ""
+                return caption, username
             except Exception:
                 pass
             finally:
@@ -96,7 +98,7 @@ def _read_and_delete_info_json(output_path, is_merge):
                     os.remove(p)
                 except Exception:
                     pass
-    return ""
+    return "", ""
 
 
 def transcription_enabled():
@@ -228,11 +230,13 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, top_p
         return
     yield sse("[OK] Download complete.")
 
-    caption = _read_and_delete_info_json(raw_path, is_merge=True)
+    caption, username = _read_and_delete_info_json(raw_path, is_merge=True)
     if caption:
         yield sse("[OK] Caption extracted.")
         encoded = base64.b64encode(caption.encode("utf-8")).decode("ascii")
         yield sse(f"CAPTION:{encoded}")
+    if username:
+        yield encode_text_event("USERNAME", username)
 
     # ── STEP 3: CONVERT TO H.264 ──────────────────────────────────────────────
     yield sse("[2/3] Converting to H.264...")
@@ -599,13 +603,15 @@ def single_download(url, mode="audio", transcribe=False):
         yield sse(f"[ERROR] Download failed. {stderr.strip()[-200:]}")
         return
 
-    caption = _read_and_delete_info_json(
+    caption, username = _read_and_delete_info_json(
         output if is_audio else raw_output,
         is_merge=not is_audio,
     )
     if caption:
         yield sse("[OK] Caption extracted.")
         yield encode_text_event("CAPTION", caption)
+        if username:
+            yield encode_text_event("USERNAME", username)
     else:
         yield sse("[OK] Download complete.")
 
