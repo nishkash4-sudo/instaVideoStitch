@@ -177,22 +177,34 @@ def transcribe_audio_file(path):
     return text, ""
 
 
-def wrap_text(text, chars_per_line=22):
-    """Split text into lines of at most chars_per_line characters, breaking on spaces."""
-    words = text.split()
-    lines, current = [], ""
-    for word in words:
-        if current and len(current) + 1 + len(word) > chars_per_line:
+def wrap_text_pixels(text, font, max_width=980):
+    """Split text into lines respecting explicit newlines, wrapping only when a line
+    exceeds max_width pixels at the given font size."""
+    lines = []
+    for paragraph in text.split('\n'):
+        paragraph = paragraph.strip()
+        if not paragraph:
+            lines.append('')
+            continue
+        words = paragraph.split()
+        current = ''
+        for word in words:
+            test = (current + ' ' + word) if current else word
+            try:
+                w = font.getlength(test)
+            except Exception:
+                w = len(test) * 0.6 * 72  # fallback estimate
+            if current and w > max_width:
+                lines.append(current)
+                current = word
+            else:
+                current = test
+        if current:
             lines.append(current)
-            current = word
-        else:
-            current = (current + " " + word).strip() if current else word
-    if current:
-        lines.append(current)
-    return lines
+    return lines if lines else ['']
 
 
-def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_bottom=0, crop_left=0, crop_right=0, top_pad=120, font_size=72, chars_per_line=22):
+def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_bottom=0, crop_left=0, crop_right=0, top_pad=120, font_size=72):
     """Download a reel and apply meme format: white canvas header + bold text + video below."""
     for dep in ("yt-dlp", "ffmpeg"):
         if not check_dependency(dep):
@@ -282,7 +294,14 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
     # ── STEP 4: BUILD MEME LAYOUT ─────────────────────────────────────────────
     yield sse("[3/3] Rendering meme layout...")
 
-    lines      = wrap_text(meme_text.upper() if font_key == "impact" else meme_text, chars_per_line=chars_per_line)
+    # Load font first — needed for pixel-accurate text wrapping
+    try:
+        pil_font = ImageFont.truetype(chosen_font_path, font_size)
+    except Exception:
+        pil_font = ImageFont.load_default()
+
+    display_text = meme_text.upper() if font_key == "impact" else meme_text
+    lines      = wrap_text_pixels(display_text, pil_font, max_width=980)
     line_h     = font_size + 28
     bottom_gap = 28                               # small gap between text and video
     header_h   = top_pad + len(lines) * line_h + bottom_gap
@@ -293,13 +312,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
     try:
         img = Image.new("RGB", (1080, header_h), color=(255, 255, 255))
 
-        # Load chosen font
-        try:
-            pil_font = ImageFont.truetype(chosen_font_path, font_size)
-        except Exception:
-            pil_font = ImageFont.load_default()
-
-        # Anchor text block to bottom of header (close to video)
+        # pil_font already loaded above; anchor text block to bottom of header
         text_block_h = len(lines) * line_h
         y_start = header_h - bottom_gap - text_block_h
 
@@ -315,7 +328,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
         if watermark.strip():
             draw = ImageDraw.Draw(img)
             try:
-                wm_font = ImageFont.truetype(chosen_font_path, 32)
+                wm_font = ImageFont.truetype(chosen_font_path, 20)
             except Exception:
                 wm_font = ImageFont.load_default()
             wm_text = watermark.strip()
@@ -333,12 +346,13 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
         return
 
     # --- ffmpeg: stack header PNG + video ---
-    # Always preserve aspect ratio — scale to fit video_h, pad remainder with
-    # black (neutral; avoids stretch when 4-side crop changes the aspect ratio).
+    # decrease: scale DOWN if needed (never up) to fit 1080×video_h, preserve AR.
+    # pad:white: fill any remaining space with white — invisible on white-bg videos,
+    # clean white borders for letterboxed/cropped content (concert footage etc).
     filt = (
         f"[1:v]scale=1080:{video_h}:"
         f"force_original_aspect_ratio=decrease,"
-        f"pad=1080:{video_h}:(ow-iw)/2:(oh-ih)/2:black[vid];"
+        f"pad=1080:{video_h}:(ow-iw)/2:0:white[vid];"
         f"[0:v][vid]vstack[out]"
     )
 
@@ -712,12 +726,11 @@ def meme():
     crop_bottom = max(0, int(data.get("crop_bottom", 0) or 0))
     crop_left   = max(0, int(data.get("crop_left",   0) or 0))
     crop_right  = max(0, int(data.get("crop_right",  0) or 0))
-    top_pad      = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 300))
+    top_pad      = max(0, min(int(data.get("top_pad", 120) if data.get("top_pad") is not None else 120), 400))
     font_size    = max(28, min(int(data.get("font_size", 72) or 72), 120))
-    chars_per_line = max(10, min(int(data.get("chars_per_line", 22) or 22), 40))
 
     def generate():
-        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad, font_size, chars_per_line)
+        yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad, font_size)
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

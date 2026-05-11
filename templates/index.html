@@ -1608,215 +1608,220 @@
 
     <!-- ════ MEME EDIT PANEL ════ -->
     <div class="app-panel hidden" id="memePanel">
-      <div class="single-layout">
+      <div class="workspace">
 
-        <!-- URL + text inputs card -->
-        <div class="single-url-card">
-          <div class="single-url-card-header">
-            <div class="header-icon">🎬</div>
-            <div>
-              <h2>Meme Edit</h2>
-              <p>Download reel · add caption header · watermark · export as 1080×1920</p>
+        <!-- ── LEFT: URL + crop preview ── -->
+        <div class="left-panel">
+          <div class="single-url-card">
+            <div class="single-url-card-header">
+              <div class="header-icon">🎬</div>
+              <div>
+                <h2>Meme Edit</h2>
+                <p>Download reel · add caption header · export as 1080×1920</p>
+              </div>
+            </div>
+            <div class="single-url-body">
+
+              <!-- URL input -->
+              <div class="single-input-wrap" style="margin-bottom:14px">
+                <span class="ig-prefix">📎</span>
+                <input
+                  type="url"
+                  class="single-url-input"
+                  id="memeUrl"
+                  placeholder="https://www.instagram.com/reel/..."
+                  oninput="onMemeUrlInput()"
+                />
+              </div>
+
+              <!-- Crop preview card (all 4 sides) -->
+              <div class="crop-card" id="memeCropCard">
+                <div class="crop-preview-wrap" id="cropWrap">
+                  <div class="crop-placeholder" id="cropPlaceholder">
+                    <span style="opacity:0.4">⬆</span>
+                    <span>Paste URL above to preview</span>
+                  </div>
+                  <img class="crop-thumb" id="cropThumb" alt="Video preview" />
+                  <!-- Shade overlays -->
+                  <div class="crop-shade" id="cropShadeTop">   <span class="crop-shade-tag" id="cropTagTop"></span></div>
+                  <div class="crop-shade" id="cropShadeBottom"><span class="crop-shade-tag" id="cropTagBottom"></span></div>
+                  <div class="crop-shade" id="cropShadeLeft">  <span class="crop-shade-tag" id="cropTagLeft"></span></div>
+                  <div class="crop-shade" id="cropShadeRight"> <span class="crop-shade-tag" id="cropTagRight"></span></div>
+                  <!-- Draggable handles -->
+                  <div class="crop-h" id="cropHandleTop"    data-side="top"></div>
+                  <div class="crop-h" id="cropHandleBottom" data-side="bottom"></div>
+                  <div class="crop-h" id="cropHandleLeft"   data-side="left"></div>
+                  <div class="crop-h" id="cropHandleRight"  data-side="right"></div>
+                </div>
+                <div class="crop-controls">
+                  <div class="crop-grid">
+                    <label class="crop-side-label">↑ Top
+                      <input type="number" id="cropTopInput" value="0" min="0" max="900" step="10"
+                             oninput="onCropSideInput('top',this.value)" />px
+                    </label>
+                    <label class="crop-side-label">↓ Bottom
+                      <input type="number" id="cropBottomInput" value="0" min="0" max="900" step="10"
+                             oninput="onCropSideInput('bottom',this.value)" />px
+                    </label>
+                    <label class="crop-side-label">← Left
+                      <input type="number" id="cropLeftInput" value="0" min="0" max="540" step="10"
+                             oninput="onCropSideInput('left',this.value)" />px
+                    </label>
+                    <label class="crop-side-label">→ Right
+                      <input type="number" id="cropRightInput" value="0" min="0" max="540" step="10"
+                             oninput="onCropSideInput('right',this.value)" />px
+                    </label>
+                  </div>
+                  <button class="crop-reset-all" onclick="resetAllCrop()">Reset All</button>
+                </div>
+              </div>
+
             </div>
           </div>
-          <div class="single-url-body">
+        </div><!-- /left-panel -->
 
-            <!-- URL input -->
-            <div class="single-input-wrap" style="margin-bottom:14px">
-              <span class="ig-prefix">📎</span>
-              <input
-                type="url"
-                class="single-url-input"
-                id="memeUrl"
-                placeholder="https://www.instagram.com/reel/..."
-                oninput="onMemeUrlInput()"
-              />
-            </div>
+        <!-- ── RIGHT: caption controls + results ── -->
+        <div class="right-panel">
 
-            <!-- Crop preview card (all 4 sides) -->
-            <div class="crop-card" id="memeCropCard">
-              <div class="crop-preview-wrap" id="cropWrap">
-                <div class="crop-placeholder" id="cropPlaceholder">
-                  <span style="opacity:0.4">⬆</span>
-                  <span>Paste URL above to preview source video</span>
+          <div class="single-url-card">
+            <div class="single-url-body" style="padding-top:20px">
+
+              <!-- Meme text -->
+              <div style="margin-bottom:14px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Meme Caption</div>
+                <textarea
+                  id="memeText"
+                  rows="3"
+                  oninput="updateMemePreview()"
+                  placeholder="Type your meme caption here…&#10;Text will be auto-wrapped and placed at the top."
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;resize:vertical;transition:all 0.2s;line-height:1.6;"
+                  onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
+                  onblur="this.style.borderColor='';this.style.boxShadow=''"
+                ></textarea>
+                <div id="memePreview" style="margin-top:6px;font-size:0.7rem;color:var(--text-dim);font-family:'SF Mono','Fira Code',monospace;">
+                  Start typing to preview layout…
                 </div>
-                <img class="crop-thumb" id="cropThumb" alt="Video preview" />
-                <!-- Shade overlays -->
-                <div class="crop-shade" id="cropShadeTop">   <span class="crop-shade-tag" id="cropTagTop"></span></div>
-                <div class="crop-shade" id="cropShadeBottom"><span class="crop-shade-tag" id="cropTagBottom"></span></div>
-                <div class="crop-shade" id="cropShadeLeft">  <span class="crop-shade-tag" id="cropTagLeft"></span></div>
-                <div class="crop-shade" id="cropShadeRight"> <span class="crop-shade-tag" id="cropTagRight"></span></div>
-                <!-- Draggable handles -->
-                <div class="crop-h" id="cropHandleTop"    data-side="top"></div>
-                <div class="crop-h" id="cropHandleBottom" data-side="bottom"></div>
-                <div class="crop-h" id="cropHandleLeft"   data-side="left"></div>
-                <div class="crop-h" id="cropHandleRight"  data-side="right"></div>
               </div>
-              <div class="crop-controls">
-                <div class="crop-grid">
-                  <label class="crop-side-label">↑ Top
-                    <input type="number" id="cropTopInput" value="0" min="0" max="900" step="10"
-                           oninput="onCropSideInput('top',this.value)" />px
+
+              <!-- Watermark -->
+              <div style="margin-bottom:18px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Watermark <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(optional)</span></div>
+                <input
+                  type="text"
+                  id="memeWatermark"
+                  placeholder="@yourhandle"
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;transition:all 0.2s;"
+                  onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
+                  onblur="this.style.borderColor='';this.style.boxShadow=''"
+                />
+              </div>
+
+              <!-- Font selector -->
+              <div style="margin-bottom:18px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Font Style</div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="fontSelector">
+                  <label style="cursor:pointer">
+                    <input type="radio" name="memeFont" value="impact" checked style="display:none" />
+                    <div class="font-pill active" data-font="impact" onclick="selectFont(this)">
+                      <span style="font-weight:900;letter-spacing:0.02em">Impact</span>
+                      <span style="font-size:0.62rem;color:var(--text-muted);display:block">Classic meme</span>
+                    </div>
                   </label>
-                  <label class="crop-side-label">↓ Bottom
-                    <input type="number" id="cropBottomInput" value="0" min="0" max="900" step="10"
-                           oninput="onCropSideInput('bottom',this.value)" />px
+                  <label style="cursor:pointer">
+                    <input type="radio" name="memeFont" value="helvetica" style="display:none" />
+                    <div class="font-pill" data-font="helvetica" onclick="selectFont(this)">
+                      <span style="font-weight:600">Helvetica</span>
+                      <span style="font-size:0.62rem;color:var(--text-muted);display:block">Clean & modern</span>
+                    </div>
                   </label>
-                  <label class="crop-side-label">← Left
-                    <input type="number" id="cropLeftInput" value="0" min="0" max="540" step="10"
-                           oninput="onCropSideInput('left',this.value)" />px
-                  </label>
-                  <label class="crop-side-label">→ Right
-                    <input type="number" id="cropRightInput" value="0" min="0" max="540" step="10"
-                           oninput="onCropSideInput('right',this.value)" />px
+                  <label style="cursor:pointer">
+                    <input type="radio" name="memeFont" value="georgia" style="display:none" />
+                    <div class="font-pill" data-font="georgia" onclick="selectFont(this)">
+                      <span style="font-style:italic;font-weight:700">Georgia</span>
+                      <span style="font-size:0.62rem;color:var(--text-muted);display:block">Editorial</span>
+                    </div>
                   </label>
                 </div>
-                <button class="crop-reset-all" onclick="resetAllCrop()">Reset All</button>
               </div>
-            </div>
 
-            <!-- Meme text -->
-            <div style="margin-bottom:14px">
-              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Meme Caption</div>
-              <textarea
-                id="memeText"
-                rows="3"
-                oninput="updateMemePreview()"
-                placeholder="Type your meme caption here…&#10;Text will be auto-wrapped and placed at the top."
-                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;resize:vertical;transition:all 0.2s;line-height:1.6;"
-                onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
-                onblur="this.style.borderColor='';this.style.boxShadow=''"
-              ></textarea>
-              <div id="memePreview" style="margin-top:6px;font-size:0.7rem;color:var(--text-dim);font-family:'SF Mono','Fira Code',monospace;">
-                Start typing to preview layout…
-              </div>
-            </div>
-
-            <!-- Watermark -->
-            <div style="margin-bottom:6px">
-              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Watermark <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(optional)</span></div>
-              <input
-                type="text"
-                id="memeWatermark"
-                placeholder="@yourhandle"
-                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-size:0.88rem;font-family:inherit;padding:13px 16px;outline:none;transition:all 0.2s;"
-                onfocus="this.style.borderColor='rgba(131,52,175,0.55)';this.style.boxShadow='0 0 0 4px rgba(131,52,175,0.08)'"
-                onblur="this.style.borderColor='';this.style.boxShadow=''"
-              />
-            </div>
-
-            <!-- Font selector -->
-            <div style="margin-bottom:18px">
-              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Font Style</div>
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="fontSelector">
-                <label style="cursor:pointer">
-                  <input type="radio" name="memeFont" value="impact" checked style="display:none" />
-                  <div class="font-pill active" data-font="impact" onclick="selectFont(this)">
-                    <span style="font-weight:900;letter-spacing:0.02em">Impact</span>
-                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Classic meme</span>
-                  </div>
-                </label>
-                <label style="cursor:pointer">
-                  <input type="radio" name="memeFont" value="helvetica" style="display:none" />
-                  <div class="font-pill" data-font="helvetica" onclick="selectFont(this)">
-                    <span style="font-weight:600">Helvetica</span>
-                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Clean & modern</span>
-                  </div>
-                </label>
-                <label style="cursor:pointer">
-                  <input type="radio" name="memeFont" value="georgia" style="display:none" />
-                  <div class="font-pill" data-font="georgia" onclick="selectFont(this)">
-                    <span style="font-style:italic;font-weight:700">Georgia</span>
-                    <span style="font-size:0.62rem;color:var(--text-muted);display:block">Editorial</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Text size + Line width -->
-            <div style="margin-bottom:18px">
-              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Text Size &amp; Line Width</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;align-items:center;">
+              <!-- Text size -->
+              <div style="margin-bottom:18px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">Text Size</div>
                 <div style="display:flex;align-items:center;gap:8px;">
                   <input type="range" id="memeTextSize" min="28" max="120" step="2" value="72"
                          oninput="onTextSizeChange(this.value)"
                          style="flex:1;accent-color:var(--ig3);" />
                   <span id="memeTextSizeLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:34px;text-align:right;">72px</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text-muted);">
-                  Line width
-                  <input type="number" id="memeLineWidth" min="10" max="40" step="1" value="22"
-                         oninput="updateMemePreview()"
-                         style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.76rem;padding:3px 7px;text-align:right;font-family:inherit;outline:none;" />
-                  chars
+              </div>
+
+              <!-- Top padding -->
+              <div style="margin-bottom:20px">
+                <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">
+                  Top Padding
+                  <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(shifts text &amp; video down)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <input
+                    type="range"
+                    id="memeTopPad"
+                    min="0" max="400" step="10" value="120"
+                    oninput="onTopPadChange(this.value)"
+                    style="flex:1;accent-color:var(--ig3);"
+                  />
+                  <span id="memeTopPadLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:38px;text-align:right;">120px</span>
                 </div>
               </div>
-            </div>
 
-            <!-- Top padding -->
-            <div style="margin-bottom:18px">
-              <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:8px;">
-                Top Padding
-                <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim)">(shifts text &amp; video down)</span>
+              <button class="single-dl-btn" id="memeBtn" onclick="startMeme()">
+                <span class="spinner" id="memeSpinner"></span>
+                <span id="memeBtnLabel">🎬 Create Meme Reel</span>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Log card -->
+          <div class="log-card" id="memeLogCard">
+            <div class="log-titlebar">
+              <div class="dot dot-r"></div>
+              <div class="dot dot-y"></div>
+              <div class="dot dot-g"></div>
+              <span class="log-label">Meme render log</span>
+            </div>
+            <div class="log-body" id="memeLogBody"></div>
+          </div>
+
+          <!-- Download result -->
+          <div class="download-card video-result" id="memeDownloadCard" style="display:none">
+            <div class="download-inner">
+              <div class="download-left">
+                <div class="dl-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)">🎬</div>
+                <div class="dl-text">
+                  <h3 style="color:var(--blue)">Your meme reel is ready!</h3>
+                  <p>1080×1920 · white header · bold text · H.264</p>
+                </div>
               </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <input
-                  type="range"
-                  id="memeTopPad"
-                  min="0" max="300" step="10" value="120"
-                  oninput="onTopPadChange(this.value)"
-                  style="flex:1;accent-color:var(--ig3);"
-                />
-                <span id="memeTopPadLabel" style="font-size:0.78rem;color:var(--text-muted);min-width:38px;text-align:right;">120px</span>
+              <a href="/download/meme_mp4" class="download-btn" style="background:var(--blue);color:#000">⬇ Download meme_output.mp4</a>
+            </div>
+          </div>
+
+          <!-- Caption card (meme) -->
+          <div class="caption-card" id="memeCaptionCard">
+            <div class="caption-card-header">
+              <div class="caption-label">
+                <span class="caption-label-icon">✍️</span>
+                Original Caption
+                <span class="username-pill" id="memeCaptionUsername" style="display:none"></span>
               </div>
+              <button class="copy-btn" id="memeCopyBtn" onclick="copyMemeCaption()">
+                📋 Copy
+              </button>
             </div>
-
-            <button class="single-dl-btn" id="memeBtn" onclick="startMeme()">
-              <span class="spinner" id="memeSpinner"></span>
-              <span id="memeBtnLabel">🎬 Create Meme Reel</span>
-            </button>
+            <div class="caption-body" id="memeCaptionBody"></div>
           </div>
-        </div>
 
-        <!-- Log card -->
-        <div class="log-card" id="memeLogCard">
-          <div class="log-titlebar">
-            <div class="dot dot-r"></div>
-            <div class="dot dot-y"></div>
-            <div class="dot dot-g"></div>
-            <span class="log-label">Meme render log</span>
-          </div>
-          <div class="log-body" id="memeLogBody"></div>
-        </div>
-
-        <!-- Download result -->
-        <div class="download-card video-result" id="memeDownloadCard" style="display:none">
-          <div class="download-inner">
-            <div class="download-left">
-              <div class="dl-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)">🎬</div>
-              <div class="dl-text">
-                <h3 style="color:var(--blue)">Your meme reel is ready!</h3>
-                <p>1080×1920 · white header · bold text · H.264</p>
-              </div>
-            </div>
-            <a href="/download/meme_mp4" class="download-btn" style="background:var(--blue);color:#000">⬇ Download meme_output.mp4</a>
-          </div>
-        </div>
-
-        <!-- Caption card (meme) -->
-        <div class="caption-card" id="memeCaptionCard">
-          <div class="caption-card-header">
-            <div class="caption-label">
-              <span class="caption-label-icon">✍️</span>
-              Original Caption
-              <span class="username-pill" id="memeCaptionUsername" style="display:none"></span>
-            </div>
-            <button class="copy-btn" id="memeCopyBtn" onclick="copyMemeCaption()">
-              📋 Copy
-            </button>
-          </div>
-          <div class="caption-body" id="memeCaptionBody"></div>
-        </div>
+        </div><!-- /right-panel -->
 
       </div>
     </div><!-- /memePanel -->
@@ -2275,10 +2280,6 @@
       const v = parseInt(document.getElementById('memeTextSize').value);
       return isNaN(v) ? 72 : v;
     }
-    function getMemeLineWidth() {
-      const v = parseInt(document.getElementById('memeLineWidth').value);
-      return isNaN(v) ? 22 : v;
-    }
 
     function onTopPadChange(val) {
       document.getElementById('memeTopPadLabel').textContent = val + 'px';
@@ -2289,21 +2290,45 @@
       updateMemePreview();
     }
 
-    function updateMemePreview() {
-      const text = document.getElementById('memeText').value.trim();
-      const preview = document.getElementById('memePreview');
-      const topPad    = getMemeTopPad();
-      const fontSize  = getMemeTextSize();
-      const lineWidth = getMemeLineWidth();
-      if (!text) { preview.textContent = 'Start typing to preview layout…'; return; }
-      // Match Python wrap_text logic
-      const words = text.split(' ');
-      let lines = [], cur = '';
-      for (const w of words) {
-        if (cur && cur.length + 1 + w.length > lineWidth) { lines.push(cur); cur = w; }
-        else cur = cur ? cur + ' ' + w : w;
+    // Canvas used for pixel-accurate text measurement (matches Pillow wrapping)
+    const _measureCanvas = document.createElement('canvas');
+    const _measureCtx = _measureCanvas.getContext('2d');
+
+    function wrapTextPixels(text, fontSize, fontFamily, maxWidth) {
+      const fontKey = getMemeFont();
+      const displayText = (fontKey === 'impact') ? text.toUpperCase() : text;
+      const weight = (fontKey === 'georgia') ? 'normal' : 'bold';
+      _measureCtx.font = `${weight} ${fontSize}px ${fontFamily}`;
+      const lines = [];
+      for (const paragraph of displayText.split('\n')) {
+        const para = paragraph.trim();
+        if (!para) { lines.push(''); continue; }
+        const words = para.split(' ');
+        let cur = '';
+        for (const word of words) {
+          const test = cur ? cur + ' ' + word : word;
+          if (cur && _measureCtx.measureText(test).width > maxWidth) {
+            lines.push(cur);
+            cur = word;
+          } else {
+            cur = test;
+          }
+        }
+        if (cur) lines.push(cur);
       }
-      if (cur) lines.push(cur);
+      return lines.length ? lines : [''];
+    }
+
+    function updateMemePreview() {
+      const text     = document.getElementById('memeText').value;
+      const preview  = document.getElementById('memePreview');
+      const topPad   = getMemeTopPad();
+      const fontSize = getMemeTextSize();
+      const fontKey  = getMemeFont();
+      const fontMap  = { impact: 'Impact, Arial Narrow, sans-serif', helvetica: 'Helvetica Neue, Helvetica, Arial, sans-serif', georgia: 'Georgia, serif' };
+      const fontFamily = fontMap[fontKey] || fontMap.helvetica;
+      if (!text.trim()) { preview.textContent = 'Start typing to preview layout…'; return; }
+      const lines   = wrapTextPixels(text, fontSize, fontFamily, 980);
       const lineH   = fontSize + 28;
       const headerH = topPad + lines.length * lineH + 28;
       preview.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''} · ~${headerH}px header · ~${1920 - headerH}px video`;
@@ -2314,6 +2339,7 @@
       el.classList.add('active');
       const radio = el.closest('label').querySelector('input[type="radio"]');
       if (radio) radio.checked = true;
+      updateMemePreview();
     }
 
     function getMemeFont() {
@@ -2362,7 +2388,7 @@
       fetch('/meme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropTop, crop_bottom: cropBottom, crop_left: cropLeft, crop_right: cropRight, top_pad: getMemeTopPad(), font_size: getMemeTextSize(), chars_per_line: getMemeLineWidth() }),
+        body: JSON.stringify({ url, meme_text: memeText, watermark, font, crop_top: cropTop, crop_bottom: cropBottom, crop_left: cropLeft, crop_right: cropRight, top_pad: getMemeTopPad(), font_size: getMemeTextSize() }),
       }).then(res => {
         const reader = res.body.getReader();
         const dec = new TextDecoder();
