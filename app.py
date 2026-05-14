@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 from PIL import Image, ImageDraw, ImageFont
 from pilmoji import Pilmoji
+from pilmoji.source import AppleEmojiSource
 from flask import Flask, render_template, request, Response, send_file
 
 app = Flask(__name__)
@@ -89,7 +90,7 @@ def _read_and_delete_info_json(output_path, is_merge):
                 with open(p, encoding="utf-8") as f:
                     meta = json.load(f)
                 caption  = meta.get("description") or meta.get("title") or ""
-                username = meta.get("uploader") or meta.get("uploader_id") or ""
+                username = meta.get("channel") or meta.get("uploader_id") or meta.get("uploader") or ""
                 return caption, username
             except Exception:
                 pass
@@ -234,6 +235,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
         "yt-dlp",
         "-f", "bestvideo+bestaudio/best",
         "--merge-output-format", "mp4",
+        "--no-playlist",
         "--write-info-json",               # writes meme_raw.info.json (no extra API calls)
         "-o", raw_path, url,
     ])
@@ -316,7 +318,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
         text_block_h = len(lines) * line_h
         y_start = header_h - bottom_gap - text_block_h
 
-        with Pilmoji(img) as pilmoji_draw:
+        with Pilmoji(img, source=AppleEmojiSource) as pilmoji_draw:
             for idx, line in enumerate(lines):
                 bbox = pilmoji_draw.getsize(line, font=pil_font)
                 text_w = bbox[0]
@@ -333,7 +335,7 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
                 wm_font = ImageFont.load_default()
             wm_text = watermark.strip()
             wbbox = draw.textbbox((0, 0), wm_text, font=wm_font)
-            wx = 1080 - (wbbox[2] - wbbox[0]) - 20
+            wx = 1080 - (wbbox[2] - wbbox[0]) - 80
             wy = header_h - (wbbox[3] - wbbox[1]) - 10
             draw.text((wx + 2, wy + 2), wm_text, font=wm_font, fill=(200, 200, 200))
             draw.text((wx, wy), wm_text, font=wm_font, fill=(80, 80, 80))
@@ -350,9 +352,9 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
     # pad:white: fill any remaining space with white — invisible on white-bg videos,
     # clean white borders for letterboxed/cropped content (concert footage etc).
     filt = (
-        f"[1:v]scale=1080:{video_h}:"
+        f"[1:v]scale=920:{video_h}:"
         f"force_original_aspect_ratio=decrease,"
-        f"pad=1080:{video_h}:(ow-iw)/2:0:white[vid];"
+        f"pad=1080:{video_h}:(ow-iw)/2:0:white[vid];"  # always ≥80px side borders
         f"[0:v][vid]vstack[out]"
     )
 
@@ -594,6 +596,7 @@ def single_download(url, mode="audio", transcribe=False):
         cmd = [
             "yt-dlp",
             "-x", "--audio-format", "mp3", "--audio-quality", "0",
+            "--no-playlist",
             "--write-info-json",           # writes single_output.mp3.info.json
             "-o", output, url,
         ]
@@ -605,6 +608,7 @@ def single_download(url, mode="audio", transcribe=False):
             "yt-dlp",
             "-f", "bestvideo+bestaudio/best",
             "--merge-output-format", "mp4",
+            "--no-playlist",
             "--write-info-json",           # writes single_raw.info.json
             "-o", raw_output, url,
         ]
