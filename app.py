@@ -355,9 +355,9 @@ def meme_edit(url, meme_text, watermark="", font_key="impact", crop_top=0, crop_
     # pad:white: fill any remaining space with white — invisible on white-bg videos,
     # clean white borders for letterboxed/cropped content (concert footage etc).
     filt = (
-        f"[1:v]scale=920:{video_h}:"
+        f"[1:v]scale=960:{video_h}:"
         f"force_original_aspect_ratio=decrease,"
-        f"pad=1080:{video_h}:(ow-iw)/2:0:white[vid];"  # always ≥80px side borders
+        f"pad=1080:{video_h}:(ow-iw)/2:0:white[vid];"  # always ≥60px side borders
         f"[0:v][vid]vstack[out]"
     )
 
