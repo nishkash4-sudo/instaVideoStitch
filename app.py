@@ -23,6 +23,9 @@ TRANSCRIPT_AUDIO = os.path.join(BASE_DIR, "transcript_input.mp3")
 TRANSCRIPT_TEXT = os.path.join(BASE_DIR, "single_transcript.txt")
 MEME_OUTPUT = os.path.join(BASE_DIR, "meme_output.mp4")
 MEME_THUMB_BASE = os.path.join(BASE_DIR, "meme_preview_thumb")
+WAVEFORM_BLACK  = os.path.join(BASE_DIR, "waveform_black.mp4")
+WAVEFORM_WEBM   = os.path.join(BASE_DIR, "waveform_transparent.webm")
+WAVEFORM_UPLOAD = os.path.join(BASE_DIR, "waveform_upload_audio")
 ENV_FILE = os.path.join(BASE_DIR, ".env")
 
 MEME_FONTS = {
@@ -556,6 +559,10 @@ def download(filetype):
         path, name = TRANSCRIPT_TEXT, "single_transcript.txt"
     elif filetype == "meme_mp4":
         path, name = MEME_OUTPUT, "meme_output.mp4"
+    elif filetype == "waveform_black":
+        path, name = WAVEFORM_BLACK, "waveform_black.mp4"
+    elif filetype == "waveform_webm":
+        path, name = WAVEFORM_WEBM, "waveform_transparent.webm"
     else:
         return "Invalid file type", 400
 
@@ -737,6 +744,80 @@ def meme():
         yield from meme_edit(url, meme_text, watermark, font_key, crop_top, crop_bottom, crop_left, crop_right, top_pad, font_size)
 
     return Response(generate(), mimetype="text/event-stream",
+                    headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.route("/waveform", methods=["POST"])
+def waveform():
+    import importlib.util, queue, threading
+
+    spec = importlib.util.spec_from_file_location(
+        "waveform_generator",
+        os.path.join(BASE_DIR, "waveform_generator.py"),
+    )
+    wg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(wg)
+
+    file = request.files.get("audio")
+    if not file or not file.filename:
+        def _err():
+            yield sse("[ERROR] No audio file received.")
+        return Response(_err(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    name = file.filename or "audio.mp3"
+    ext  = os.path.splitext(name)[1].lower() or ".mp3"
+    upload_path = WAVEFORM_UPLOAD + ext
+
+    try:
+        n_lines = max(3, min(int(request.form.get("lines", 7)), 13))
+        spread  = max(0.1, min(float(request.form.get("spread", 0.38)), 1.0))
+        height  = max(60, min(int(request.form.get("height", 160)), 300))
+    except (ValueError, TypeError):
+        n_lines, spread, height = 7, 0.38, 160
+
+    for p in (upload_path, WAVEFORM_BLACK, WAVEFORM_WEBM):
+        if os.path.exists(p):
+            os.remove(p)
+
+    file.save(upload_path)
+
+    q = queue.Queue()
+
+    def run():
+        try:
+            wg.generate(
+                upload_path, WAVEFORM_BLACK, WAVEFORM_WEBM,
+                n_lines=n_lines, spread=spread, strip_h=height,
+                progress_cb=lambda msg: q.put(("log", msg)),
+            )
+            q.put(("done", None))
+        except Exception as e:
+            q.put(("error", str(e)[:400]))
+        finally:
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+
+    threading.Thread(target=run, daemon=True).start()
+
+    def stream():
+        while True:
+            try:
+                kind, msg = q.get(timeout=600)
+            except queue.Empty:
+                yield sse("[ERROR] Timed out waiting for waveform render.")
+                break
+            if kind == "log":
+                yield sse(msg)
+            elif kind == "done":
+                yield sse("[OK] Waveform files ready!")
+                yield sse("DONE:waveform")
+                break
+            elif kind == "error":
+                yield sse(f"[ERROR] {msg}")
+                break
+
+    return Response(stream(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 

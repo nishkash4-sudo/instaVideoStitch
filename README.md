@@ -1,12 +1,14 @@
 # InstaStitch
 
-> **Download Instagram Reels. Stitch them together. Turn them into memes. All on your machine — no uploads, no cloud, no cost.**
+> **Download Instagram Reels. Stitch them together. Turn them into memes. Generate audio-reactive waveforms. All on your machine — no uploads, no cloud, no cost.**
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red?style=flat-square)
 ![ffmpeg](https://img.shields.io/badge/ffmpeg-required-green?style=flat-square)
 ![Pillow](https://img.shields.io/badge/Pillow-10.x-yellow?style=flat-square)
+![librosa](https://img.shields.io/badge/librosa-0.10+-orange?style=flat-square)
+![scipy](https://img.shields.io/badge/scipy-1.x-lightblue?style=flat-square)
 
 ---
 
@@ -18,7 +20,7 @@ You paste Instagram Reel links, pick what you want to do, and get back polished 
 
 ---
 
-## The three things it does
+## The four things it does
 
 ### ⬇ Single Download
 Paste one Reel URL → get the audio as MP3 or the video as MP4. The original post caption and the poster's username are automatically pulled and shown in the app. Optional: transcribe the audio to text using OpenAI Whisper.
@@ -28,6 +30,9 @@ Paste 2 to 30 Reel URLs → get one single merged file. All clips are automatica
 
 ### 🎬 Meme Edit
 Paste a Reel URL → crop out any unwanted parts (headers, black bars, borders) → type your caption → get the classic Instagram meme format: white header with your bold text on top, video below, all in one 1080×1920 portrait clip. Full creative control: font, text size, padding, watermark.
+
+### 〜 Waveform
+Upload any audio file (MP3, WAV, M4A, AAC, OGG, FLAC) → get a smooth, audio-reactive waveform video. Powered by a real frequency-spectrum analyser (64 log-spaced bands) so the visual reacts to the actual content of the music — bass on the left, treble on the right. Output: a black-background MP4 for InShot/CapCut and a transparent WebM for desktop editors.
 
 ---
 
@@ -59,7 +64,7 @@ cd InstaStitch
 ### Step 4 — Set up Python
 ```bash
 python3 -m venv venv
-venv/bin/pip install flask Pillow pilmoji
+venv/bin/pip install flask Pillow pilmoji librosa scipy numpy
 ```
 
 ### Step 5 — (Optional) Add your OpenAI key for transcription
@@ -374,6 +379,83 @@ You paste URL + type caption
 
 ---
 
+## Mode 4 — Waveform
+
+### What it does
+Takes any audio file and renders a smooth, mirrored frequency-spectrum waveform video. The audio is split into 64 log-spaced frequency bands (like a graphic equaliser). Each band is drawn as a smooth curve that snaps up on the beat and falls gracefully — no jitter, no lag. The output is two files you can drop straight into your video editor.
+
+### How to use it
+1. Click the **〜 Waveform** tab at the top
+2. Click the drop zone (or drag your audio file onto it) — MP3, WAV, M4A, AAC, OGG, FLAC all work
+3. Adjust **Lines** (3 / 5 / 7 / 11 parallel curves), **Spread** (how far the lines fan at peaks), and **Strip height**
+4. Click **〜 Generate Waveform**
+5. Watch the live log — it shows analysis and render progress in real time
+6. Download the **MP4** (for InShot / CapCut) or the **WebM** (for Premiere / DaVinci / Canva)
+
+### Using the MP4 in InShot (black background → transparent)
+The black-background MP4 uses a blend-mode trick to fake transparency:
+
+1. Open your main video in InShot
+2. Tap **PiP** → import `waveform_black.mp4`
+3. Resize and position it over your video
+4. Tap the PiP layer → tap **Blend**
+5. Select **Screen** (black disappears, white stays visible)
+
+**Screen** is best for most backgrounds. **Lighten** works better if your background is very bright.
+
+### Using the WebM in desktop editors
+The WebM has a real alpha channel — import it directly as an overlay track in Premiere Pro, DaVinci Resolve, or Canva. No blend mode needed.
+
+### What happens behind the scenes
+
+```
+You upload an audio file
+        │
+        ▼
+  librosa loads audio at 44,100 Hz
+        │
+        ▼
+  librosa.stft() computes one FFT frame per video frame
+  (hop_length = sr / fps → exact 1:1 alignment)
+        │
+        ▼
+  64 log-spaced frequency bands: 40 Hz → 14,000 Hz
+  Each band = mean magnitude of its FFT bins
+        │
+        ▼
+  Asymmetric temporal smoothing per band:
+  RISE: snaps up fast (alpha = 0.80) → tight on the beat
+  FALL: decays slowly (alpha = 0.12) → graceful trail-off
+        │
+        ▼
+  For each frame:
+  Cubic spline through 64 band values → smooth W-pixel curve
+  Mirrored above and below centre line
+  N parallel lines fan out proportional to band height (spread)
+  3× supersampling + LANCZOS downscale for anti-aliased lines
+  Gaussian glow layer composited on top
+        │
+        ├── ffmpeg → black-bg MP4 (libx264, yuv420p, Screen blend)
+        └── ffmpeg → transparent WebM (libvpx-vp9, yuva420p)
+        │
+        ▼
+  ✓ Both files ready to download
+```
+
+### Output specs
+
+| File | Codec | Use in |
+|------|-------|--------|
+| `waveform_black.mp4` | H.264, black background | InShot, CapCut — set blend to Screen |
+| `waveform_transparent.webm` | VP9 + alpha channel | Premiere, DaVinci Resolve, Canva |
+
+Both are 1080px wide. Height matches the Strip height slider (default 160px).
+
+### Render time
+Approximately 1–2 minutes for a 30-second audio file on an M-series Mac.
+
+---
+
 ## Live progress — always
 
 Every mode streams live logs to your browser as things happen. You see each step as it completes. No spinner that might be frozen.
@@ -401,6 +483,8 @@ DONE
 | `output.mp4` | Multi Stitch (video) | All clips merged into one MP4 |
 | `meme_output.mp4` | Meme Edit | White header + video, 1080×1920 |
 | `single_transcript.txt` | Single Download (if enabled) | Full text transcript |
+| `waveform_black.mp4` | Waveform | Frequency spectrum, black background (Screen blend) |
+| `waveform_transparent.webm` | Waveform | Frequency spectrum, VP9 alpha channel |
 
 ⚠️ All files are saved to the project folder and **overwritten on each new run**. Download before running again.
 
@@ -411,9 +495,12 @@ DONE
 | Tool | What it actually does |
 |------|-----------------------|
 | **yt-dlp** | Downloads the Reel video/audio from Instagram. Also fetches the thumbnail and post metadata — caption, username — all from the same request, no extra calls. |
-| **ffmpeg** | The video engine. Does H.264 encoding, audio normalization, clip stitching, cropping all 4 sides, and stacking the header on top of the video. |
-| **Pillow** | Python's image library. Draws the white meme header canvas, places text on it, and measures pixel widths for accurate text wrapping. |
+| **ffmpeg** | The video engine. Does H.264 encoding, audio normalization, clip stitching, cropping all 4 sides, stacking the meme header, and encoding the waveform outputs (MP4 + WebM). |
+| **Pillow** | Python's image library. Draws the meme header canvas, places text, and renders every waveform frame (supersampled lines + glow). |
 | **pilmoji** | Extends Pillow to render emoji as real Twemoji images (colorful Twitter-style) instead of broken boxes or empty squares. |
+| **librosa** | Audio analysis library. Used by Waveform mode to load audio and compute the STFT (Short-Time Fourier Transform) — one FFT frame per video frame, exactly aligned. |
+| **scipy** | Scientific computing. Used by Waveform mode for per-band temporal smoothing and cubic spline interpolation between frequency bands. |
+| **numpy** | Numerical computing. Powers all the array operations in the waveform pipeline — FFT magnitudes, band aggregation, envelope smoothing. |
 | **OpenAI Whisper** | Cloud transcription service. Only used if you enable Transcribe in Single Download mode. Requires your own API key. |
 | **Flask** | The local web server. Powers the browser UI and streams progress updates in real time via Server-Sent Events. |
 
@@ -423,13 +510,14 @@ DONE
 
 ```
 InstaStitch/
-├── app.py              # Flask server — all download, stitch, and meme pipelines
+├── app.py                  # Flask server — all pipelines + SSE streaming
+├── waveform_generator.py   # Waveform engine — STFT, band envelopes, frame renderer
 ├── templates/
-│   └── index.html      # Single-page UI with 3 tabs, two-column meme layout
-├── .env                # Your OPENAI_API_KEY (not committed to git)
-├── venv/               # Python virtual environment (not committed to git)
+│   └── index.html          # Single-page UI with 4 tabs
+├── .env                    # Your OPENAI_API_KEY (not committed to git)
+├── venv/                   # Python virtual environment (not committed to git)
 └── .claude/
-    └── launch.json     # Dev server config
+    └── launch.json         # Dev server config
 ```
 
 ---
@@ -439,7 +527,8 @@ InstaStitch/
 - macOS (or any system with Python 3.9+)
 - `ffmpeg` — the video processing engine
 - `yt-dlp` — the downloader
-- `flask`, `Pillow`, `pilmoji` — Python packages (installed in step 4)
+- `flask`, `Pillow`, `pilmoji` — Python packages for the core app
+- `librosa`, `scipy`, `numpy` — Python packages for the Waveform feature
 - `OPENAI_API_KEY` in a `.env` file — only needed for transcription
 
 ---

@@ -1281,6 +1281,156 @@
     }
     .crop-reset-all:hover { border-color: rgba(248,113,113,0.4); color: var(--text); }
 
+    /* ── Waveform panel ── */
+    .wv-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .wv-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .wv-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .wv-card-header .header-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--ig3), var(--ig2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .wv-card-header h2 { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .wv-card-header p  { font-size: 0.78rem; color: var(--text-muted); }
+    .wv-card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 18px; }
+
+    .wv-dropzone {
+      border: 2px dashed var(--border-bright);
+      border-radius: 12px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .wv-dropzone:hover, .wv-dropzone.drag-over {
+      border-color: var(--ig2);
+      background: rgba(221,42,123,0.04);
+    }
+    .wv-dropzone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 1;
+    }
+    .wv-drop-icon { font-size: 32px; margin-bottom: 10px; pointer-events: none; }
+    .wv-drop-label { font-size: 0.85rem; color: var(--text-muted); pointer-events: none; }
+    .wv-drop-label strong { color: var(--text); }
+    .wv-filename {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--purple);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .wv-row { display: flex; flex-direction: column; gap: 8px; }
+    .wv-row label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    .wv-pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .wv-pill {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border-bright);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .wv-pill:hover { border-color: rgba(167,139,250,0.4); color: var(--text); }
+    .wv-pill.selected {
+      border-color: var(--ig2);
+      background: rgba(221,42,123,0.12);
+      color: var(--text);
+    }
+
+    .wv-color-row { display: flex; gap: 10px; align-items: center; }
+    .wv-swatch {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      outline: 2px solid transparent;
+    }
+    .wv-swatch:hover { transform: scale(1.15); }
+    .wv-swatch.selected { border-color: var(--ig2); outline-color: rgba(221,42,123,0.4); }
+
+    .wv-slider-row { display: flex; align-items: center; gap: 14px; }
+    .wv-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface3);
+      outline: none;
+    }
+    .wv-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--ig2);
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(221,42,123,0.4);
+    }
+    .wv-slider-val {
+      min-width: 44px;
+      text-align: right;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--purple);
+    }
+
+    .wv-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--ig3), var(--ig2));
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    .wv-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(221,42,123,0.35); }
+    .wv-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .wv-status {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .wv-status.visible { display: block; }
+    .wv-status.ok  { color: var(--success); border-color: rgba(74,222,128,0.2); }
+    .wv-status.err { color: var(--err);     border-color: rgba(248,113,113,0.2); }
+
     /* ── Responsive ── */
     @media (max-width: 780px) {
       .workspace { grid-template-columns: 1fr; }
@@ -1329,6 +1479,10 @@
       <div class="app-tab-divider"></div>
       <button class="app-tab" id="tabMeme" onclick="switchAppMode('meme')">
         <span class="tab-icon">🎬</span> Meme Edit
+      </button>
+      <div class="app-tab-divider"></div>
+      <button class="app-tab" id="tabWaveform" onclick="switchAppMode('waveform')">
+        <span class="tab-icon">〜</span> Waveform
       </button>
     </div>
 
@@ -1826,6 +1980,108 @@
       </div>
     </div><!-- /memePanel -->
 
+    <!-- ════ WAVEFORM PANEL ════ -->
+    <div class="app-panel hidden" id="waveformPanel">
+      <div class="wv-layout">
+
+        <div class="wv-card">
+          <div class="wv-card-header">
+            <div class="header-icon">〜</div>
+            <div>
+              <h2>Waveform Generator</h2>
+              <p>Upload audio · renders a smooth multi-line waveform · transparent output</p>
+            </div>
+          </div>
+          <div class="wv-card-body">
+
+            <!-- Audio drop zone -->
+            <div class="wv-dropzone" id="wvDropzone">
+              <input type="file" id="wvFileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" />
+              <div class="wv-drop-icon">🎵</div>
+              <div class="wv-drop-label"><strong>Click to choose audio</strong> or drag &amp; drop here</div>
+              <div class="wv-drop-label" style="font-size:0.72rem;margin-top:4px;opacity:0.55">MP3 · WAV · M4A · AAC · OGG · FLAC</div>
+              <div class="wv-filename" id="wvFilename"></div>
+            </div>
+
+            <!-- Lines count -->
+            <div class="wv-row">
+              <label>Lines</label>
+              <div class="wv-pill-row">
+                <button class="wv-pill"          data-group="lines" data-val="3"  onclick="wvPickLines(3)">3</button>
+                <button class="wv-pill"          data-group="lines" data-val="5"  onclick="wvPickLines(5)">5</button>
+                <button class="wv-pill selected" data-group="lines" data-val="7"  onclick="wvPickLines(7)">7</button>
+                <button class="wv-pill"          data-group="lines" data-val="11" onclick="wvPickLines(11)">11</button>
+              </div>
+            </div>
+
+            <!-- Spread -->
+            <div class="wv-row">
+              <label>Spread  <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">— how far lines fan at peaks</span></label>
+              <div class="wv-slider-row">
+                <input type="range" class="wv-slider" id="wvSpreadSlider" min="10" max="80" value="38" step="2" oninput="document.getElementById('wvSpreadVal').textContent=(this.value/100).toFixed(2)" />
+                <span class="wv-slider-val" id="wvSpreadVal">0.38</span>
+              </div>
+            </div>
+
+            <!-- Strip height -->
+            <div class="wv-row">
+              <label>Strip height</label>
+              <div class="wv-slider-row">
+                <input type="range" class="wv-slider" id="wvHeightSlider" min="60" max="280" value="160" step="10" oninput="document.getElementById('wvHeightVal').textContent=this.value+'px'" />
+                <span class="wv-slider-val" id="wvHeightVal">160px</span>
+              </div>
+            </div>
+
+            <!-- Generate button -->
+            <button class="wv-btn" id="wvBtn" onclick="wvProcess()" disabled>
+              〜 Generate Waveform
+            </button>
+
+            <!-- Live log -->
+            <div class="log-card" id="wvLogPanel" style="display:none">
+              <div class="log-titlebar">
+                <div class="dot dot-r"></div>
+                <div class="dot dot-y"></div>
+                <div class="dot dot-g"></div>
+                <span class="log-label">Waveform render log</span>
+              </div>
+              <div class="log-body" id="wvLogBody"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Download cards — outside wv-card so overflow:hidden doesn't clip them -->
+        <div id="wvDownloadCard" style="display:none;flex-direction:column;gap:10px">
+          <div class="download-card video-result" style="display:block;margin-bottom:0">
+            <div class="download-inner">
+              <div class="download-left">
+                <div class="dl-icon" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2)">📱</div>
+                <div class="dl-text">
+                  <div class="dl-title">InShot / CapCut — black background</div>
+                  <div class="dl-desc">Import as PiP layer · set blend mode to <strong>Screen</strong> or <strong>Lighten</strong></div>
+                </div>
+              </div>
+              <a href="/download/waveform_black" class="download-btn" download>⬇ Download MP4</a>
+            </div>
+          </div>
+          <div class="download-card video-result" style="display:block">
+            <div class="download-inner">
+              <div class="download-left">
+                <div class="dl-icon" style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2)">🖥</div>
+                <div class="dl-text">
+                  <div class="dl-title">Desktop editors — transparent WebM</div>
+                  <div class="dl-desc">VP9 alpha channel · works in Premiere, DaVinci, Canva</div>
+                </div>
+              </div>
+              <a href="/download/waveform_webm" class="download-btn" download>⬇ Download WebM</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /waveformPanel -->
+
   </div><!-- /page -->
 
   <script>
@@ -2068,13 +2324,15 @@
 
     /* ── App mode switcher ── */
     function switchAppMode(mode) {
-      ['single','stitch','meme'].forEach(m => {
+      ['single','stitch','meme','waveform'].forEach(m => {
         document.getElementById(m + 'Panel').classList.toggle('hidden', m !== mode);
         document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
       });
       // Sync header icon
       if (mode === 'meme') {
         document.getElementById('logoIcon').textContent = '🎬';
+      } else if (mode === 'waveform') {
+        document.getElementById('logoIcon').textContent = '〜';
       } else {
         const isAudio = mode === 'single' ? getSingleMode() === 'audio' : getMode() === 'audio';
         document.getElementById('logoIcon').textContent = isAudio ? '🎵' : '🎬';
@@ -2611,6 +2869,111 @@
     }
 
     initCropDrag();
+
+    /* ── Waveform tab ── */
+    (function () {
+      let wvFile  = null;
+      let wvLines = 7;
+
+      function wvPickLines(val) {
+        wvLines = val;
+        document.querySelectorAll('.wv-pill[data-group="lines"]').forEach(b =>
+          b.classList.toggle('selected', +b.dataset.val === val));
+      }
+
+      function wvSetFile(file) {
+        if (!file) return;
+        const ok = file.type.startsWith('audio/') ||
+                   /\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(file.name);
+        if (!ok) { wvAppendLog('[ERROR] Please choose an audio file (MP3, WAV, M4A…)'); return; }
+        wvFile = file;
+        document.getElementById('wvFilename').textContent = '🎵 ' + file.name;
+        document.getElementById('wvBtn').disabled = false;
+      }
+
+      function wvAppendLog(text) {
+        const body = document.getElementById('wvLogBody');
+        const line = document.createElement('div');
+        line.className = 'log-line';
+        let cls = '';
+        if (/\[ERROR\]/.test(text)) cls = 'err';
+        else if (/\[WARN\]/.test(text))  cls = 'warn';
+        else if (/\[OK\]/.test(text))    cls = 'ok';
+        else if (/^\[[\d/]+\]/.test(text)) cls = 'head';
+        if (cls) line.classList.add(cls);
+        const now = new Date().toTimeString().slice(0, 8);
+        line.innerHTML = `<span class="ts">${now}</span><span class="msg">${text}</span>`;
+        body.appendChild(line);
+        body.scrollTop = body.scrollHeight;
+      }
+
+      function wvProcess() {
+        if (!wvFile) { wvAppendLog('[ERROR] No audio file selected.'); return; }
+        const btn      = document.getElementById('wvBtn');
+        const dlCard   = document.getElementById('wvDownloadCard');
+        const logPanel = document.getElementById('wvLogPanel');
+        const logBody  = document.getElementById('wvLogBody');
+
+        btn.disabled = true;
+        dlCard.style.display = 'none';
+        logBody.innerHTML = '';
+        logPanel.style.display = 'block';
+
+        const spread = (document.getElementById('wvSpreadSlider').value / 100).toFixed(2);
+        const height = document.getElementById('wvHeightSlider').value;
+        const fd = new FormData();
+        fd.append('audio',  wvFile);
+        fd.append('lines',  wvLines);
+        fd.append('spread', spread);
+        fd.append('height', height);
+
+        fetch('/waveform', { method: 'POST', body: fd })
+          .then(res => {
+            const reader = res.body.getReader();
+            const dec = new TextDecoder();
+            let buf = '';
+            function read() {
+              reader.read().then(({ done, value }) => {
+                if (done) { btn.disabled = false; return; }
+                buf += dec.decode(value, { stream: true });
+                const lines = buf.split('\n'); buf = lines.pop();
+                for (const line of lines) {
+                  if (!line.startsWith('data: ')) continue;
+                  const msg = line.slice(6).trim();
+                  if (msg === 'DONE:waveform') {
+                    btn.disabled = false;
+                    dlCard.style.display = 'block';
+                    dlCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  } else {
+                    wvAppendLog(msg);
+                  }
+                }
+                read();
+              });
+            }
+            read();
+          })
+          .catch(err => {
+            wvAppendLog(`[ERROR] ${err}`);
+            btn.disabled = false;
+          });
+      }
+
+      window.wvPickLines = wvPickLines;
+      window.wvProcess   = wvProcess;
+
+      // Drop zone
+      const dz = document.getElementById('wvDropzone');
+      if (dz) {
+        dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', e => {
+          e.preventDefault(); dz.classList.remove('drag-over');
+          wvSetFile(e.dataTransfer.files[0]);
+        });
+        document.getElementById('wvFileInput').addEventListener('change', e => wvSetFile(e.target.files[0]));
+      }
+    })();
   </script>
 </body>
 </html>
